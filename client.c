@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <string.h>
+#include "common.h"
 
 #define LINE_LENGTH 1024
 #define N_ARGS 10

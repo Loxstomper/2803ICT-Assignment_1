@@ -1,8 +1,12 @@
-client: client.o
-	cc -o client client.o
+all: client.o server.o
+	cc -o client client.o 
+	cc -o server server.o
 
-server: server.o
-	cc -o server server.o 
+client: client.o 
+	cc -o client client.o common.h
+
+server: server.o 
+	cc -o server server.o common.h
 
 client.o: client.c
 	cc client.c -c
