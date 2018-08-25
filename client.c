@@ -15,11 +15,12 @@ int main(int argc, char ** argv)
     /* } */
 
 
-    char message[1024];
-    char reply[2048];
+    char message[BUFFER_SIZE];
+    char reply[BUFFER_SIZE];
     int sock;
 
     struct sockaddr_in server;
+    size_t reply_length;
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -48,7 +49,7 @@ int main(int argc, char ** argv)
     while (1)
     {
         printf("\nRequest: ");
-        fgets(message, 1024, stdin);
+        fgets(message, BUFFER_SIZE, stdin);
 
         if (send(sock, message, strlen(message), 0) < 0)
         {
@@ -56,21 +57,35 @@ int main(int argc, char ** argv)
             return -1;
         }
 
+        memset(&message, '\0', strlen(message));
+
         if ((strcmp(message, "quit\n")) == 0)
         {
             break;
+            printf("IM QUITTING");
             /* clean up zombies */
         }
 
-        if (recv(sock, reply, 2048, 0) < 0)
+        reply_length = recv(sock, reply, BUFFER_SIZE, 0);
+
+        if (recv(sock, reply, BUFFER_SIZE, 0) == -1)
         {
             printf("Recv Failed!\n");
-            return -1;
+            exit(1);
         }
 
-        printf("\n%s\n", reply);
-        memset(&reply, '\0', strlen(reply));
-        memset(&message, '\0', strlen(message));
+        do {
+            printf("%s", reply);
+            memset(&reply, '\0', strlen(reply));
+            reply_length = recv(sock, reply, BUFFER_SIZE, 0);
+        }
+        while (reply_length > 0);
+
+        printf("\n");
+
+        /* printf("\n%s\n", reply); */
+        /* memset(&reply, '\0', strlen(reply)); */
+        /* memset(&message, '\0', strlen(message)); */
     }
 
     close(sock);

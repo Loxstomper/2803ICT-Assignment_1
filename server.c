@@ -1,37 +1,40 @@
 #include "common.h"
+#include "server_func.h"
 
-/* make buffer size in the common */
 
 /* put this in seperate file */
-void list(int client_sock, char buffer[1024])
-{
-    FILE* f = popen("ls", "r");
+/* void list(int client_sock, char buffer[BUFFER_SIZE]) */
+/* { */
+/*     FILE* f = popen("ls", "r"); */
 
-    while (fgets(buffer, 1024, f) != NULL)
-    {
-        send(client_sock, buffer, strlen(buffer), 0);
-    }
-}
+/*     while (fgets(buffer, 1024, f) != NULL) */
+/*     { */
+/*         send(client_sock, buffer, strlen(buffer), 0); */
+/*         memset(buffer, '\0', strlen(buffer)); */
+/*     } */
+/* } */
 
-void get(int client_sock, char buffer[1024])
-{
-    FILE* f = popen("cat client.c", "r");
+/* void get(int client_sock, char buffer[BUFFER_SIZE]) */
+/* { */
+/*     FILE* f = popen("cat client.c", "r"); */
 
-    while (fgets(buffer, 1024, f) != NULL)
-    {
-        send(client_sock, buffer, strlen(buffer), 0);
-    }
-}
+/*     while (fgets(buffer, BUFFER_SIZE, f) != NULL) */
+/*     { */
+/*         send(client_sock, buffer, strlen(buffer), 0); */
+/*         memset(buffer, '\0', strlen(buffer)); */
+/*     } */
+/* } */
 
-void sys(int client_sock, char buffer[1024])
-{
-    FILE* f = popen("uname -sr && cat /proc/cpuinfo | grep 'model name' | uniq && uname -p", "r");
+/* void sys(int client_sock, char buffer[BUFFER_SIZE]) */
+/* { */
+/*     FILE* f = popen("uname -sr && cat /proc/cpuinfo | grep 'model name' | uniq && uname -p", "r"); */
 
-    while (fgets(buffer, 1024, f) != NULL)
-    {
-        send(client_sock, buffer, strlen(buffer), 0);
-    }
-}
+/*     while (fgets(buffer, BUFFER_SIZE, f) != NULL) */
+/*     { */
+/*         send(client_sock, buffer, strlen(buffer), 0); */
+/*         memset(buffer, '\0', strlen(buffer)); */
+/*     } */
+/* } */
 
 int main(int argc, char ** argv)
 {
@@ -44,7 +47,7 @@ int main(int argc, char ** argv)
 
 	socklen_t addr_size;
 
-	char buffer[1024];
+	char buffer[BUFFER_SIZE];
 	pid_t childpid;
 
     int test;
@@ -74,7 +77,7 @@ int main(int argc, char ** argv)
 
 	if (listen(server_sock, 10) == 0)
     {
-		printf("Listning...\n");
+		printf("Listning...\n\n");
 	}
     else
     {
@@ -92,7 +95,7 @@ int main(int argc, char ** argv)
 			exit(1);
 		}
 
-		printf("Connection accepted from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+		printf("%s:%d connected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         memset(&buffer, '\0', 0);
 
@@ -102,36 +105,43 @@ int main(int argc, char ** argv)
 
 			while(1)
             {
-				recv(client_sock, buffer, 1024, 0);
+				recv(client_sock, buffer, BUFFER_SIZE, 0);
 
 				if(strcmp(buffer, "quit\n") == 0)
                 {
-					printf("Disconnected from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+					printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
                     break;
 				}
+
+                printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
+
+                if (strcmp(buffer, "list\n") == 0)
+                {
+                    list(client_sock, buffer);
+                }
+                else if (strcmp(buffer, "get\n") == 0)
+                {
+                    get(client_sock, buffer);
+                }
+                else if (strcmp(buffer, "sys\n") == 0)
+                {
+                    sys(client_sock, buffer);
+                }
+                else if (strcmp(buffer, "fuck\n") == 0)
+                {
+                    while (1)
+                    {
+                        strcpy(buffer, "FUCK YOU TOO");
+                        send(client_sock, buffer, strlen(buffer), 0);
+                    }
+                }
                 else
                 {
-					printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
-
-                    if (strcmp(buffer, "list\n") == 0)
-                    {
-                        list(client_sock, buffer);
-                    }
-					else if (strcmp(buffer, "get\n") == 0)
-                    {
-                        get(client_sock, buffer);
-                    }
-                    else if (strcmp(buffer, "sys\n") == 0)
-                    {
-                        sys(client_sock, buffer);
-                    }
-                    else
-                    {
-                        send(client_sock, buffer, strlen(buffer), 0);
-                    }                    
-                    
-                    memset(&buffer, '\0', strlen(buffer));
-				}
+                    strcpy(buffer, "unknown command");
+                    send(client_sock, buffer, strlen(buffer), 0);
+                }                    
+                
+                memset(&buffer, '\0', strlen(buffer));
 			}
 
             close(client_sock);

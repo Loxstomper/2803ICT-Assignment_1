@@ -10,5 +10,6 @@
 #include <signal.h>
 
 #define PORT 10001 
+#define BUFFER_SIZE 1024
 
 #endif
