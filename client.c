@@ -2,6 +2,9 @@
 #include "client.h"
 
 
+/* use signals to check for ctrl+c and run quit function */
+
+
 int main(int argc, char ** argv)
 {
     
@@ -41,6 +44,7 @@ int main(int argc, char ** argv)
 
     printf("Connected\n");
 
+    /* need to fork on after each submission */
     while (1)
     {
         printf("\nRequest: ");
@@ -55,6 +59,7 @@ int main(int argc, char ** argv)
         if ((strcmp(message, "quit\n")) == 0)
         {
             break;
+            /* clean up zombies */
         }
 
         if (recv(sock, reply, 2048, 0) < 0)

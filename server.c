@@ -1,72 +1,93 @@
 #include "common.h"
-#include "server.h"
-
 
 int main(int argc, char ** argv)
 {
-    int socket_desc, client_sock, c, read_size;
-    struct sockaddr_in server, client;
 
-    char client_message[1024];
-    char to_send[1024];
+	int server_sock;
+	struct sockaddr_in server_addr;
 
-    printf("Server starting\n");
+	int client_sock;
+	struct sockaddr_in client_addr;
 
-    /* create the socket */
-    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
+	socklen_t addr_size;
 
-    if (socket_desc == -1)
+	char buffer[1024];
+	pid_t childpid;
+
+    int test;
+
+	server_sock = socket(AF_INET, SOCK_STREAM, 0);
+
+	if (server_sock < 0)
     {
-        printf("Failed to create socket\n");
-        return -1;
-    }
-    printf("Socket created\n");
+		printf("Server socket creation error.\n");
+		exit(1);
+	}
+	printf("Server socket created.\n");
 
-    /* set up the struct */
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(PORT);
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(PORT);
+	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    /* bind */
-    if (bind(socket_desc, (struct sockaddr*)&server, sizeof(server)) < 0)
+    test = bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)); 
+
+    /* if(test < 0); */
+    /* { */
+		/* printf("Bind error.\n"); */
+		/* exit(1); */
+	/* } */
+
+	printf("Binded to port %d\n", PORT);
+
+	if (listen(server_sock, 10) == 0)
     {
-        printf("Bind Fail\n");
-        return -1;
-    }
-
-    printf("Bind complete\n");
-
-    listen(socket_desc, 10);
-
-    c = sizeof(struct sockaddr_in);
-
-    client_sock = accept(socket_desc, (struct sockaddr*)&client, (socklen_t*)&c);
-
-    if (client_sock < 0)
+		printf("Listning...\n");
+	}
+    else
     {
-        printf("Accept failed!\n");
-        return -1;
-    }
+		printf("Bind error.\n");
+        exit(1);
+	}
 
-    printf("Connection accepted\n");
 
-    while((read_size = read(client_sock, client_message, sizeof(client_message))) > 0)
+	while (1)
     {
-        printf("Message: %s\n", client_message);
+		client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &addr_size);
 
-        if ((strcmp(client_message, "quit")) == 0)
+		if(client_sock < 0)
         {
-            break;
-        }
+			exit(1);
+		}
 
-        write(client_sock, client_message, strlen(client_message));
-        memset(&client_message, '\0', strlen(client_message));
-    }
+		printf("Connection accepted from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-    if (read_size == 0)
-    {
-        printf("Client disconnected\n");
-    }
+        memset(&buffer, '\0', 0);
 
-    return 0;
+		if((childpid = fork()) == 0)
+        {
+			close(server_sock);
+
+			while(1)
+            {
+				recv(client_sock, buffer, 1024, 0);
+
+				if(strcmp(buffer, "quit\n") == 0)
+                {
+					printf("Disconnected from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                    break;
+				}
+                else
+                {
+					printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
+					send(client_sock, buffer, strlen(buffer), 0);
+                    memset(&buffer, '\0', strlen(buffer));
+				}
+			}
+
+            close(client_sock);
+		}
+
+	}
+
+	return 0;
 }
