@@ -1,5 +1,38 @@
 #include "common.h"
 
+/* make buffer size in the common */
+
+/* put this in seperate file */
+void list(int client_sock, char buffer[1024])
+{
+    FILE* f = popen("ls", "r");
+
+    while (fgets(buffer, 1024, f) != NULL)
+    {
+        send(client_sock, buffer, strlen(buffer), 0);
+    }
+}
+
+void get(int client_sock, char buffer[1024])
+{
+    FILE* f = popen("cat client.c", "r");
+
+    while (fgets(buffer, 1024, f) != NULL)
+    {
+        send(client_sock, buffer, strlen(buffer), 0);
+    }
+}
+
+void sys(int client_sock, char buffer[1024])
+{
+    FILE* f = popen("uname -sr && cat /proc/cpuinfo | grep 'model name' | uniq && uname -p", "r");
+
+    while (fgets(buffer, 1024, f) != NULL)
+    {
+        send(client_sock, buffer, strlen(buffer), 0);
+    }
+}
+
 int main(int argc, char ** argv)
 {
 
@@ -79,7 +112,24 @@ int main(int argc, char ** argv)
                 else
                 {
 					printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
-					send(client_sock, buffer, strlen(buffer), 0);
+
+                    if (strcmp(buffer, "list\n") == 0)
+                    {
+                        list(client_sock, buffer);
+                    }
+					else if (strcmp(buffer, "get\n") == 0)
+                    {
+                        get(client_sock, buffer);
+                    }
+                    else if (strcmp(buffer, "sys\n") == 0)
+                    {
+                        sys(client_sock, buffer);
+                    }
+                    else
+                    {
+                        send(client_sock, buffer, strlen(buffer), 0);
+                    }                    
+                    
                     memset(&buffer, '\0', strlen(buffer));
 				}
 			}

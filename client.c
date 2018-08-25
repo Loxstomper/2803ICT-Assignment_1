@@ -68,7 +68,7 @@ int main(int argc, char ** argv)
             return -1;
         }
 
-        printf("Reply: %s\n", reply);
+        printf("\n%s\n", reply);
         memset(&reply, '\0', strlen(reply));
         memset(&message, '\0', strlen(message));
     }
