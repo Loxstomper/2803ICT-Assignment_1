@@ -1,10 +1,11 @@
 #include "server_func.h"
+
 #define ARG_BUFFER_SIZE 64
 
 void list(int client_sock, char** args) 
 {
     char* output_buffer = malloc(BUFFER_SIZE * sizeof(char));
-    const char* base_command = "ls ./programs/";
+    static const char* base_command = "ls ./programs/";
     char* command;
 
     if (!output_buffer)
@@ -51,7 +52,6 @@ void list(int client_sock, char** args)
             command = (char*) malloc(sizeof(base_command) + 5 + sizeof(args[2]));
             strcpy(command, base_command);
             strcat(command, args[2]);
-            strcat(command, " ");
             strcat(command, " -l");
         }
     }
@@ -78,6 +78,7 @@ void list(int client_sock, char** args)
     printf("COMMAND: %s\n", command);
     FILE* f = popen(command, "r");
 
+    free(args);
     free(command);
     
     if (!f)
@@ -95,58 +96,125 @@ void list(int client_sock, char** args)
 
 }
 
-void get(int client_sock, char buffer[BUFFER_SIZE])
+void get(int client_sock, char** args)
 {
+    printf("IN GET FUNCTION\n");
+
+    char* output_buffer = malloc(BUFFER_SIZE * sizeof(char));
+    static const char* base_dir = "./programs/";
+    char* path;
+
+    path = (char*) malloc(sizeof(base_dir) + 1 + sizeof(args[1]) + 1 + sizeof(args[2]) + 1 + 10);
+    strcpy(path, base_dir);
+    strcat(path, args[1]);
+    strcat(path, "/");
+    strcat(path, args[2]);
+
+    printf("PATH: %s\n", path);
     /* change this just to read the file for cross platform */ 
-    FILE* f = popen("cat client.c", "r");
+    FILE* f = fopen(path, "r");
 
-    while (fgets(buffer, BUFFER_SIZE, f) != NULL)
+    int line_count = 0;
+
+    while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
-        send(client_sock, buffer, strlen(buffer), 0);
-        memset(buffer, '\0', strlen(buffer));
+        line_count ++;
+        printf("%s", output_buffer);
+        send(client_sock, output_buffer, strlen(output_buffer), 0);
+
+        if (line_count % 40 == 0)
+        {
+            printf("\nWAITING\n\n");
+        }
+
+        memset(output_buffer, '\0', strlen(output_buffer));
     }
+
+
+    printf("\n");
+    fclose(f);
+    free(output_buffer);
+    free(args);
 }
 
-void sys(int client_sock, char buffer[BUFFER_SIZE])
+
+// do i need to close f?
+void put(int client_sock, char ** args)
 {
-    FILE* f = popen("uname -sr && cat /proc/cpuinfo | grep 'model name' | uniq && uname -p", "r");
+    // program name, source file, -f
 
-    while (fgets(buffer, BUFFER_SIZE, f) != NULL)
+    // this is lame but oh well
+    static char* base_path = "./programs/";
+    static char* mkdir = "mkdir -p ./programs/";
+
+    char* input_buffer = malloc(BUFFER_SIZE * sizeof(char));
+    char* command;
+    char* path;
+
+    command = (char*) malloc(sizeof(mkdir) + sizeof(args[1]) + 4);
+    strcpy(command, mkdir);
+    strcat(command, args[1]);
+
+    FILE* f = popen(command, "r");
+
+    path = (char*) malloc(sizeof(base_path) + sizeof(args[1]) + sizeof(args[2]) + 8);
+    strcpy(path, base_path);
+    strcat(path, args[1]);
+    strcat(path, "/");
+    strcat(path, args[2]);
+
+    // check if file exists
+    int file_exits = (access(path, F_OK) != -1);
+    int forced     = (strcmp(args[2], "-f") == 0);
+
+    if (file_exits && !forced)
     {
-        send(client_sock, buffer, strlen(buffer), 0);
-        memset(buffer, '\0', strlen(buffer));
+        printf("FILE EXISTS AND NOT FORCED MODE: %s \n", path);
     }
+    // file doesnt exist, or it does and force mode is on
+    else
+    {
+        FILE* fp = fopen(path, "w");
+
+        // read until eof and write to file
+        recv(client_sock, input_buffer, BUFFER_SIZE, 0);
+
+        while (input_buffer[strlen(input_buffer)] != EOF)
+        {
+            fprintf(fp, input_buffer);
+            memset(&input_buffer, '\0', strlen(input_buffer));
+        }
+
+        fclose(fp);
+
+    }
+
+    free(input_buffer);
+    free(command);
+    free(path);
+    free(args);
 }
 
-#define DELIM " \t\n\r"
-char** get_args(char line[BUFFER_SIZE])
+void sys(int client_sock)
 {
-    int position = 0;
+    printf("INSIDE SYS FUNCTION\n\n");
 
-    char** args = malloc(ARG_BUFFER_SIZE * sizeof(char*));
-    char* arg;
+    char* output_buffer = malloc(BUFFER_SIZE * sizeof(char));
+    static const char* command = "uname -sr && cat /proc/cpuinfo | grep 'model name' | uniq && uname -p";
 
-    if (!args)
+    FILE* f = popen(command, "r");
+
+    while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
-        printf("Failed to dynamically allocate args char**\n");
-        exit(1);
+        send(client_sock, output_buffer, strlen(output_buffer), 0);
+        printf("%s", output_buffer);
+        memset(output_buffer, '\0', strlen(output_buffer));
     }
 
-    arg = strtok(line, DELIM);
-
-    while (arg != NULL)
-    {
-        args[position] = arg;
-        printf("%d: %s\n", position, args[position]);
-        position ++;
-
-        arg = strtok(NULL, DELIM);
-    }
-
-    args[position] = NULL;
-
-    return args;
+    free(output_buffer);
 }
+
+
 
 void print_args(char** args)
 {

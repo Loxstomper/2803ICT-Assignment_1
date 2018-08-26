@@ -82,6 +82,15 @@ int main(int argc, char ** argv)
 	server_addr.sin_port = htons(PORT);
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+    int yes=1;
+
+    if (setsockopt(server_sock,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1) 
+    {
+        perror("setsockopt");
+        exit(1);
+    } 
+
+
     test = bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)); 
 
     if(test < 0)
@@ -144,7 +153,7 @@ int main(int argc, char ** argv)
                 }
                 else if (strcmp(args[0], "sys") == 0)
                 {
-                    sys(client_sock, args);
+                    sys(client_sock);
                 }
                 else if (strcmp(args[0], "fuck") == 0)
                 {
