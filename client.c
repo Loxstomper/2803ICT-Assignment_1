@@ -15,9 +15,10 @@ int main(int argc, char ** argv)
     /* } */
 
 
-    char message[BUFFER_SIZE];
-    char reply[BUFFER_SIZE];
-    int sock;
+    char   message[BUFFER_SIZE];
+    char   reply[BUFFER_SIZE];
+    int    sock;
+    char** args;
 
     struct sockaddr_in server;
     size_t reply_length;
@@ -51,41 +52,62 @@ int main(int argc, char ** argv)
         printf("\nRequest: ");
         fgets(message, BUFFER_SIZE, stdin);
 
-        if (send(sock, message, strlen(message), 0) < 0)
+        args = get_args(message);
+
+        // some of the functions require the client to do stuff
+        if (strcmp(args[0], "put") == 0)
         {
-            printf("Send Failed!\n");
-            return -1;
+            put(sock, args);
         }
-
-        memset(&message, '\0', strlen(message));
-
-        if ((strcmp(message, "quit\n")) == 0)
+        else if (strcmp(args[0], "get") == 0)
         {
+            get(sock, message);
+            free(args);
+        }
+        else if (strcmp(args[0], "run"))
+        {
+            run(sock, message, args);
+        }
+        else if (strcmp(args[0], "quit") == 0)
+        {
+            free(args);
             break;
-            printf("IM QUITTING");
-            /* clean up zombies */
         }
-
-        reply_length = recv(sock, reply, BUFFER_SIZE, 0);
-
-        if (recv(sock, reply, BUFFER_SIZE, 0) == -1)
+        // commands that are purely server sided
+        else
         {
-            printf("Recv Failed!\n");
-            exit(1);
+            free(args);
+
+            if (send(sock, message, strlen(message), 0) < 0)
+            {
+                printf("Send Failed!\n");
+                exit(1);
+            }
+
+            reply_length = recv(sock, reply, BUFFER_SIZE, 0);
+
+            if (reply_length < 0)
+            {
+                printf("Recv Failed!");
+                exit(1);
+            }
+
+            printf("\n");
+
+            while (reply_length > 0)
+            {
+                printf("%s", reply);
+                memset(&reply, '\0', strlen(reply));
+                reply_length = recv(sock, reply, BUFFER_SIZE, 0);
+            }
+
         }
 
-        /* do { */
-        /*     printf("%s", reply); */
-        /*     memset(&reply, '\0', strlen(reply)); */
-        /*     reply_length = recv(sock, reply, BUFFER_SIZE, 0); */
-        /* } */
-        /* while (reply_length > 0); */
-
-
-        printf("\n%s\n", reply);
-        memset(&reply, '\0', strlen(reply));
+        // output finished
         memset(&message, '\0', strlen(message));
     }
+
+    //clean up zombies?
 
     close(sock);
 
