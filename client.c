@@ -74,18 +74,17 @@ int main(int argc, char ** argv)
             exit(1);
         }
 
-        do {
-            printf("%s", reply);
-            memset(&reply, '\0', strlen(reply));
-            reply_length = recv(sock, reply, BUFFER_SIZE, 0);
-        }
-        while (reply_length > 0);
+        /* do { */
+        /*     printf("%s", reply); */
+        /*     memset(&reply, '\0', strlen(reply)); */
+        /*     reply_length = recv(sock, reply, BUFFER_SIZE, 0); */
+        /* } */
+        /* while (reply_length > 0); */
 
-        printf("\n");
 
-        /* printf("\n%s\n", reply); */
-        /* memset(&reply, '\0', strlen(reply)); */
-        /* memset(&message, '\0', strlen(message)); */
+        printf("\n%s\n", reply);
+        memset(&reply, '\0', strlen(reply));
+        memset(&message, '\0', strlen(message));
     }
 
     close(sock);

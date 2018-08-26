@@ -11,5 +11,6 @@
 
 #define PORT 10001 
 #define BUFFER_SIZE 1024
+#define ARG_BUFFER_SIZE 64
 
 #endif

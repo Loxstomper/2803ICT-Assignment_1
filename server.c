@@ -48,6 +48,7 @@ int main(int argc, char ** argv)
 	socklen_t addr_size;
 
 	char buffer[BUFFER_SIZE];
+    char** args;
 	pid_t childpid;
 
     int test;
@@ -106,8 +107,9 @@ int main(int argc, char ** argv)
 			while(1)
             {
 				recv(client_sock, buffer, BUFFER_SIZE, 0);
+                args = get_args(buffer);
 
-				if(strcmp(buffer, "quit\n") == 0)
+				if(strcmp(args[0], "quit") == 0)
                 {
 					printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
                     break;
@@ -115,19 +117,20 @@ int main(int argc, char ** argv)
 
                 printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
 
-                if (strcmp(buffer, "list\n") == 0)
+                if (strcmp(args[0], "list") == 0)
                 {
-                    list(client_sock, buffer);
+                    printf("LIST\n");
+                    list(client_sock, args);
                 }
-                else if (strcmp(buffer, "get\n") == 0)
+                else if (strcmp(args[0], "get") == 0)
                 {
-                    get(client_sock, buffer);
+                    get(client_sock, args);
                 }
-                else if (strcmp(buffer, "sys\n") == 0)
+                else if (strcmp(args[0], "sys") == 0)
                 {
-                    sys(client_sock, buffer);
+                    sys(client_sock, args);
                 }
-                else if (strcmp(buffer, "fuck\n") == 0)
+                else if (strcmp(args[0], "fuck") == 0)
                 {
                     while (1)
                     {
