@@ -1,12 +1,13 @@
 #include "server_func.h"
+#define ARG_BUFFER_SIZE 64
 
 void list(int client_sock, char** args) 
 {
-    char* buffer = malloc(BUFFER_SIZE * sizeof(char));
+    char* output_buffer = malloc(BUFFER_SIZE * sizeof(char));
     const char* base_command = "ls ./programs/";
     char* command;
 
-    if (!buffer)
+    if (!output_buffer)
     {
         printf("Failed to dynamically create buffer\n");
         exit(1);
@@ -25,64 +26,57 @@ void list(int client_sock, char** args)
 
     printf("\n");
 
-    FILE* f; 
+     
 
-    if (arg_length > 1)
+    /* long list */
+    printf("LONG LIST? %d\n", strcmp(args[1], "-l") == 0);
+    if (strcmp(args[1], "-l") == 0)
     {
-        /* long list */
-        if (strcmp(args[1], "-l") == 0)
+        /* long list no program specified */
+        //getting some garbage data
+        if (args[2] == NULL)
         {
-            /* long list no program specified */
-            if (args[2] == NULL)
-            {
-                char* new;
+            printf("LONG LIST AND NO PROGRAM SPECIFIED\n");
 
-                if (new = malloc((sizeof(base_command) + sizeof(char) * 3) + 1) == NULL)
-                {
-                    printf("Failed malloc\n");
-                    exit(1);
-                }
-
-                new[0] = '\0';
-                strcat(new, base_command);
-                strcat(new, " -l");
-                
-                strcpy(command, new);
-
-                free(new);
-            }
-            /* long list program name specified */
-            else
-            {
-                char* new = malloc((sizeof(base_command) + sizeof(char) * 3 + sizeof(args[2])) + 1);
-                new[0] = '\0';
-                strcat(new, base_command);
-                strcat(new, " -l");
-                strcat(new, args[2]);
-                
-                strcpy(command, new);
-
-                free(new);
-            }
+            command = (char*) malloc(sizeof(base_command) + 4);
+            strcpy(command, base_command);
+            strcat(command, " -l");
+ 
         }
+        /* long list program name specified */
         else
         {
-            /* list all programs */
-            if (args[2] == NULL)
-            {
-                command = malloc(sizeof(base_command));
-                strcpy(command, base_command);
-            }
-            /* list program name specified */
-            else
-            {
+            printf("LONG LIST AND PROGRAM SPECIFIED\n");
 
-            }
+            command = (char*) malloc(sizeof(base_command) + 5 + sizeof(args[2]));
+            strcpy(command, base_command);
+            strcat(command, args[2]);
+            strcat(command, " ");
+            strcat(command, " -l");
+        }
+    }
+    else
+    {
+        printf("NORMAL LIST\n");
+
+        /* list all programs */
+        if (args[1] == NULL)
+        {
+            command = malloc(sizeof(base_command));
+            strcpy(command, base_command);
+        }
+        /* list program name specified */
+        else
+        {
+            command = (char*) malloc(sizeof(base_command) + 2 + sizeof(args[1]));
+            strcpy(command, base_command);
+            strcat(command, args[1]);
+            strcat(command, " ");
         }
     }
 
-    printf("COMMAND: %s", command);
-    f = popen(command, "r");
+    printf("COMMAND: %s\n", command);
+    FILE* f = popen(command, "r");
 
     free(command);
     
@@ -92,11 +86,11 @@ void list(int client_sock, char** args)
         exit(1);
     }
 
-    while (fgets(buffer, BUFFER_SIZE, f) != NULL)
+    while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
-        send(client_sock, buffer, strlen(buffer), 0);
-        /* printf("%s", buffer) */
-        memset(buffer, '\0', strlen(buffer));
+        send(client_sock, output_buffer, strlen(output_buffer), 0);
+        printf("%s", output_buffer);
+        memset(output_buffer, '\0', strlen(output_buffer));
     }
 
 }

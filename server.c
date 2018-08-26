@@ -1,6 +1,19 @@
 #include "common.h"
 #include "server_func.h"
 
+int server_sock;
+
+void sigintHandler(int sig_num)
+{
+    printf("\nI HAVE BEEN CLOSED\n");
+    close(server_sock);
+    exit(1);
+}
+
+
+
+//CTRL+C runs cleanup function then quits
+
 
 /* put this in seperate file */
 /* void list(int client_sock, char buffer[BUFFER_SIZE]) */
@@ -36,10 +49,13 @@
 /*     } */
 /* } */
 
+
 int main(int argc, char ** argv)
 {
+    signal(SIGINT, sigintHandler);
 
-	int server_sock;
+
+	//int server_sock;
 	struct sockaddr_in server_addr;
 
 	int client_sock;
@@ -68,11 +84,11 @@ int main(int argc, char ** argv)
 
     test = bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)); 
 
-    /* if(test < 0); */
-    /* { */
-		/* printf("Bind error.\n"); */
-		/* exit(1); */
-	/* } */
+    if(test < 0)
+    {
+		printf("Bind error.\n"); 
+		exit(1);
+	}
 
 	printf("Binded to port %d\n", PORT);
 
