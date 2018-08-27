@@ -125,7 +125,11 @@ void get(int client_sock, char** args)
         if (line_count % 40 == 0)
         {
             printf("\nWAITING\n\n");
+            /* put a recv call because thats blocking */
+            /* get client to wait for the 40 lines and then do a scanf or something */
+            /* dont even use the data though */
         }
+
 
         memset(output_buffer, '\0', strlen(output_buffer));
     }
@@ -197,8 +201,6 @@ void put(int client_sock, char ** args)
 
 void sys(int client_sock)
 {
-    printf("INSIDE SYS FUNCTION\n\n");
-
     char* output_buffer = malloc(BUFFER_SIZE * sizeof(char));
     static const char* command = "uname -sr && cat /proc/cpuinfo | grep 'model name' | uniq && uname -p";
 

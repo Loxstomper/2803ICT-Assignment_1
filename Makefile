@@ -1,4 +1,4 @@
-all: client.o server.o
+all: client.o server.o client_func.o server_func.o common.o
 	cc -o client client.o client_func.o common.o common.h client.h
 	cc -o server server.o server_func.o common.o common.h server_func.h
 

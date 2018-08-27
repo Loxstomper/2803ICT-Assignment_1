@@ -94,13 +94,26 @@ int main(int argc, char ** argv)
                 exit(1);
             }
 
-            printf("\n");
+            printf("\n%s", reply);
+            memset(&reply, '\0', strlen(reply));
 
-            while (reply_length > 0)
+            /* remember and not null terminating char */
+            while (reply_length == BUFFER_SIZE - 1)
             {
                 printf("%s", reply);
                 memset(&reply, '\0', strlen(reply));
+
+
                 reply_length = recv(sock, reply, BUFFER_SIZE, 0);
+
+                /* checks if the response is finished */
+                /* buffer is not full but server response is finished */
+                if (reply[strlen(reply)] == 'Σ')
+                {
+                    printf("%s", reply);
+                    memset(&reply, '\0', strlen(reply));
+                    break;
+                }
             }
         }
 

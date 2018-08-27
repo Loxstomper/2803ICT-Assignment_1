@@ -125,7 +125,7 @@ int main(int argc, char ** argv)
                 }
                 else
                 {
-                    strcpy(buffer, "unknown command");
+                    strcpy(buffer, "unknown commandΣ");
                     send(client_sock, buffer, strlen(buffer), 0);
                 }                    
                 
