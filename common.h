@@ -12,6 +12,9 @@
 #define PORT 18284 
 #define BUFFER_SIZE 1024
 #define ARG_BUFFER_SIZE 64
+#define DELIM " \t\n\r"
+
+char** get_args(char line[BUFFER_SIZE]);
 
 
 #endif

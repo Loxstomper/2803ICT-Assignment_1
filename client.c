@@ -1,5 +1,6 @@
 #include "common.h"
 #include "client.h"
+#include "client_func.h"
 
 
 /* use signals to check for ctrl+c and run quit function */
@@ -64,7 +65,7 @@ int main(int argc, char ** argv)
             get(sock, message);
             free(args);
         }
-        else if (strcmp(args[0], "run"))
+        else if (strcmp(args[0], "run") == 0)
         {
             run(sock, message, args);
         }
@@ -73,7 +74,8 @@ int main(int argc, char ** argv)
             free(args);
             break;
         }
-        // commands that are purely server sided
+        /* commands that are purely server sided */
+        /* e.g. sys */
         else
         {
             free(args);
@@ -100,11 +102,11 @@ int main(int argc, char ** argv)
                 memset(&reply, '\0', strlen(reply));
                 reply_length = recv(sock, reply, BUFFER_SIZE, 0);
             }
-
         }
 
         // output finished
         memset(&message, '\0', strlen(message));
+        memset(&reply, '\0', strlen(reply));
     }
 
     //clean up zombies?
