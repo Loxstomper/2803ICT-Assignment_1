@@ -1,6 +1,6 @@
 all: client.o server.o
-	cc -o client client.o 
-	cc -o server server.o 
+	cc -o client client.o client_func.o common.o common.h client.h
+	cc -o server server.o server_func.o common.o common.h server_func.h
 
 client: client.o  client_func.o common.o
 	cc -o client client.o client_func.o common.o common.h client.h
