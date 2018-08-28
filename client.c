@@ -94,6 +94,7 @@ int main(int argc, char ** argv)
                 exit(1);
             }
 
+            reply[strlen(reply) - 1] = '\0';
             printf("\n%s", reply);
             memset(&reply, '\0', strlen(reply));
 
@@ -106,9 +107,10 @@ int main(int argc, char ** argv)
 
                 reply_length = recv(sock, reply, BUFFER_SIZE, 0);
 
+                char end = 4;
                 /* checks if the response is finished */
                 /* buffer is not full but server response is finished */
-                if (reply[strlen(reply)] == 'Σ')
+                if (reply[strlen(reply)] == end) // 4 is decimal ascii for EOT - end of transmission
                 {
                     printf("%s", reply);
                     memset(&reply, '\0', strlen(reply));

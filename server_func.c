@@ -104,6 +104,10 @@ void get(int client_sock, char** args)
     static const char* base_dir = "./programs/";
     char* path;
 
+    char* input_buffer = malloc(16 * sizeof(char));
+
+    printf("PROGRAM: %s | FILE: %s\n", args[1], args[2]);
+
     path = (char*) malloc(sizeof(base_dir) + 1 + sizeof(args[1]) + 1 + sizeof(args[2]) + 1 + 10);
     strcpy(path, base_dir);
     strcat(path, args[1]);
@@ -128,6 +132,7 @@ void get(int client_sock, char** args)
             /* put a recv call because thats blocking */
             /* get client to wait for the 40 lines and then do a scanf or something */
             /* dont even use the data though */
+            recv(client_sock, input_buffer, 16, 0);
         }
 
 
@@ -137,6 +142,7 @@ void get(int client_sock, char** args)
 
     printf("\n");
     fclose(f);
+    free(input_buffer);
     free(output_buffer);
     free(args);
 }

@@ -89,6 +89,7 @@ int main(int argc, char ** argv)
         {
 			close(server_sock);
 
+            /* i dont think i need this while(1) just send the single response and then die */
 			while(1)
             {
 				recv(client_sock, buffer, BUFFER_SIZE, 0);
@@ -119,13 +120,17 @@ int main(int argc, char ** argv)
                 {
                     while (1)
                     {
-                        strcpy(buffer, "loop");
+                        strcpy(buffer, "loop\n\0");
                         send(client_sock, buffer, strlen(buffer), 0);
                     }
                 }
                 else
                 {
-                    strcpy(buffer, "unknown commandΣ");
+                    char end = 4;
+                    strcpy(buffer, "unknown command");
+                    buffer[strlen(buffer)] = end;
+                    buffer[strlen(buffer)] = '\0';
+
                     send(client_sock, buffer, strlen(buffer), 0);
                 }                    
                 

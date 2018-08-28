@@ -14,6 +14,7 @@ while (recv_size == BUFFER_SIZE && strcmp(reply[BUFFER_SIZE - 1], "terminating c
 }
 
 GET THE SERVER TO SEND THE TERMINATING CHAR
+maybe make a unicode character
 
 
 RUN COMMAND
@@ -21,3 +22,4 @@ RUN COMMAND
 opendir command or something like that
 lets you iterate through all files
 
+i think the client is just sending the first arg
