@@ -6,12 +6,18 @@ char** get_args(char line[BUFFER_SIZE])
     // memory leak? never freeing
     char** args = malloc(ARG_BUFFER_SIZE * sizeof(char*));
     char* arg;
+
+    char* temp = malloc(BUFFER_SIZE * sizeof(char));
+
+    strcpy(temp, line);
+
+
     if (!args)
     {
         printf("Failed to dynamically allocate args char**\n");
         exit(1);
     }
-    arg = strtok(line, DELIM);
+    arg = strtok(temp, DELIM);
     while (arg != NULL)
     {
         args[position] = arg;
@@ -20,5 +26,8 @@ char** get_args(char line[BUFFER_SIZE])
         arg = strtok(NULL, DELIM);
     }
     args[position] = NULL;
+
+    free(temp);
+
     return args;
 }

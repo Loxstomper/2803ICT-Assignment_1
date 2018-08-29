@@ -53,7 +53,11 @@ int main(int argc, char ** argv)
         printf("\nRequest: ");
         fgets(message, BUFFER_SIZE, stdin);
 
+        printf("BUFFER: %s\n", message);
         args = get_args(message);
+        /* message[strlen(message)] = ' '; */
+        printf("BUFFER: %s\n", message);
+
 
         // some of the functions require the client to do stuff
         if (strcmp(args[0], "put") == 0)

@@ -1,11 +1,18 @@
 #include "common.h"
 #include "server_func.h"
 
+
+/* change error printf to perror */
+
+/* global variable :( */
+/* ave to for the sig handler */
 int server_sock;
 
 void sigintHandler(int sig_num)
 {
     printf("\nI HAVE BEEN CLOSED\n");
+
+    /* close the socket, clients are still connected though */
     close(server_sock);
     exit(1);
 }
@@ -27,7 +34,6 @@ int main(int argc, char ** argv)
     char** args;
 	pid_t childpid;
 
-    int test;
 
 	server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -51,6 +57,7 @@ int main(int argc, char ** argv)
     } 
 
 
+    int test;
     test = bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)); 
 
     if(test < 0)
@@ -85,23 +92,33 @@ int main(int argc, char ** argv)
 
         memset(&buffer, '\0', 0);
 
-		if((childpid = fork()) == 0)
-        {
-			close(server_sock);
+        /* no zombies */
+        signal(SIGCHLD, SIG_IGN);
 
-            /* i dont think i need this while(1) just send the single response and then die */
-			while(1)
+        /* this whole if used to be in a while loop */
+        while (1)
+        {
+        /* no need to have inner loop, the forked process only does one thing */
+            /* i think ^ this is wrong, and I need the loop */
+            if((childpid = fork()) == 0)
             {
-				recv(client_sock, buffer, BUFFER_SIZE, 0);
+                close(server_sock);
+
+                recv(client_sock, buffer, BUFFER_SIZE, 0);
+
+                /* print what the user sent */
+                printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
+
+                /* split into args */
                 args = get_args(buffer);
 
-				if(strcmp(args[0], "quit") == 0)
-                {
-					printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-                    break;
-				}
 
-                printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
+                if(strcmp(args[0], "quit") == 0)
+                {
+                    printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                    break;
+                }
+
 
                 if (strcmp(args[0], "list") == 0)
                 {
@@ -118,9 +135,9 @@ int main(int argc, char ** argv)
                 }
                 else if (strcmp(args[0], "loop") == 0)
                 {
+                    strcpy(buffer, "loop\n\0");
                     while (1)
                     {
-                        strcpy(buffer, "loop\n\0");
                         send(client_sock, buffer, strlen(buffer), 0);
                     }
                 }
@@ -135,12 +152,12 @@ int main(int argc, char ** argv)
                 }                    
                 
                 memset(&buffer, '\0', strlen(buffer));
-			}
 
-            close(client_sock);
-		}
+                close(client_sock);
+            }
 
-	}
+        }
+    }
 
 	return 0;
 }
