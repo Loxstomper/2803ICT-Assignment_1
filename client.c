@@ -92,7 +92,8 @@ int main(int argc, char ** argv)
         /* e.g. sys */
         else
         {
-            free(args);
+            /* free(args); */
+            free_args(args);
 
             if (send(sock, message, strlen(message), 0) < 0)
             {
@@ -103,65 +104,12 @@ int main(int argc, char ** argv)
             /* ----------------- getting output -------------------------- */
             usleep(1000);
             read_data(sock);
-
-            /* reply_length = recv(sock, reply, BUFFER_SIZE, 0); */
-
-            /* if (reply_length < 0) */
-            /* { */
-            /*     printf("Recv Failed!"); */
-            /*     exit(1); */
-            /* } */
-
-            /* if (reply_length < BUFFER_SIZE) */
-            /* { */
-            /*     /1* gets rid of the terminating characterr *1/ */
-            /*     reply[strlen(reply) - 2] = '\0'; */
-            /* } */
-
-            /* printf("\n%s", reply); */
-            /* memset(&reply, '\0', strlen(reply)); */
-
-            /* while (reply_length > 0) */
-            /* { */
-            /*     recv(sock, reply, BUFFER_SIZE, 0); */
-            /*     printf("%s", reply); */
-            /* } */
-
-            /* remember and not null terminating char */
-            /* while (reply_length == BUFFER_SIZE) */
-            /* { */
-            /*     printf("%s", reply); */
-            /*     memset(&reply, '\0', strlen(reply)); */
-
-
-            /*     reply_length = recv(sock, reply, BUFFER_SIZE, 0); */
-
-            /*     char end = '`'; */
-            /*     /1* checks if the response is finished *1/ */
-            /*     /1* buffer is not full but server response is finished *1/ */
-            /*     if (reply[strlen(reply)] == end) // 4 is decimal ascii for EOT - end of transmission */
-            /*     { */
-            /*         /1* reply[strlen(reply)] = '\0'; *1/ */
-            /*         printf("%s", reply); */
-            /*         memset(&reply, '\0', strlen(reply)); */
-            /*         break; */
-            /*     } */
-            /* } */
-
-            /* /1* remove the terminating character *1/ */
-            /* if (reply_length > 0) */
-            /* { */
-            /*     /1* removing the terminating character *1/ */
-            /*     reply[strlen(reply) - 2] = '\0'; */
-            /* } */
         }
 
         // output finished
         memset(&message, '\0', strlen(message));
         memset(&reply, '\0', strlen(reply));
     }
-
-    //clean up zombies?
 
     close(sock);
 

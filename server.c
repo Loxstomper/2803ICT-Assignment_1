@@ -22,8 +22,10 @@ int main(int argc, char ** argv)
     /* ctrl+c */
     signal(SIGINT, sigintHandler);
 
+    /* no zombies */
+    signal(SIGCHLD, SIG_IGN);
+    /* look at rubens code slide 57 */
 
-	//int server_sock;
 	struct sockaddr_in server_addr;
 
 	int client_sock;
@@ -71,7 +73,7 @@ int main(int argc, char ** argv)
 
 	if (listen(server_sock, 10) == 0)
     {
-		printf("Listning...\n\n");
+		printf("Listening...\n\n");
 	}
     else
     {
@@ -92,77 +94,65 @@ int main(int argc, char ** argv)
 
 		printf("%s:%d connected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-        memset(&buffer, '\0', 0);
+        if((childpid = fork()) == 0)
+        {
+            close(server_sock);
 
-        /* no zombies */
-        signal(SIGCHLD, SIG_IGN);
-        /* look at rubens slides for this maybe slide 57 */
+            recv(client_sock, buffer, BUFFER_SIZE, 0);
+            printf("SOCK: %d \n", client_sock);
+            send(client_sock, buffer, strlen(buffer), 0);
+            continue;
 
-        /* this whole if used to be in a while loop */
-        /* while (1) */
-        /* { */
-        /* no need to have inner loop, the forked process only does one thing */
-            /* i think ^ this is wrong, and I need the loop */
-            if((childpid = fork()) == 0)
+            /* print what the user sent */
+            printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
+
+            /* split into args */
+            args = get_args(buffer);
+
+            if(strcmp(args[0], "quit") == 0)
             {
-                close(server_sock);
-
-                recv(client_sock, buffer, BUFFER_SIZE, 0);
-
-                /* print what the user sent */
-                printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
-
-                /* split into args */
-                args = get_args(buffer);
-                printf("ARG 0:%s|\n", args[0]);
-
-
-                if(strcmp(args[0], "quit") == 0)
-                {
-                    printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-                    exit(1);
-                    break;
-                }
-
-
-                if (strcmp(args[0], "list") == 0)
-                {
-                    printf("LIST\n");
-                    list(client_sock, args);
-                }
-                else if (strcmp(args[0], "get") == 0)
-                {
-                    get(client_sock, args);
-                }
-                else if (strcmp(args[0], "sys") == 0)
-                {
-                    sys(client_sock);
-                }
-                else if (strcmp(args[0], "loop") == 0)
-                {
-                    strcpy(buffer, "loop\n\0");
-                    while (1)
-                    {
-                        send(client_sock, buffer, strlen(buffer), 0);
-                    }
-                }
-                else
-                {
-                    /* this is a bad terminator */
-                    char end = '`';
-                    strcpy(buffer, "unknown command");
-                    buffer[strlen(buffer)] = end;
-                    buffer[strlen(buffer) + 1] = '\0';
-
-                    send(client_sock, buffer, strlen(buffer), 0);
-                }                    
-                
-                memset(&buffer, '\0', strlen(buffer));
-
-                close(client_sock);
-                /* check this */
+                printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                exit(1);
+                break;
             }
-        /* } */
+
+
+            if (strcmp(args[0], "list") == 0)
+            {
+                printf("LIST\n");
+                list(client_sock, args);
+            }
+            else if (strcmp(args[0], "get") == 0)
+            {
+                get(client_sock, args);
+            }
+            else if (strcmp(args[0], "sys") == 0)
+            {
+                sys(client_sock);
+            }
+            else if (strcmp(args[0], "loop") == 0)
+            {
+                strcpy(buffer, "loop\n\0");
+                while (1)
+                {
+                    send(client_sock, buffer, strlen(buffer), 0);
+                }
+            }
+            else
+            {
+                char end = '`';
+                strcpy(buffer, "unknown command");
+                buffer[strlen(buffer)] = end;
+                buffer[strlen(buffer) + 1] = '\0';
+
+                send(client_sock, buffer, strlen(buffer), 0);
+            }                    
+            
+            memset(&buffer, '\0', strlen(buffer));
+
+        }
+    
+        close(client_sock);
     }
 
 	return 0;

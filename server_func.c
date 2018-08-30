@@ -225,6 +225,8 @@ void sys(int client_sock)
         memset(output_buffer, '\0', strlen(output_buffer));
     }
 
+    printf("EXITING SYS\n");
+
     free(output_buffer);
 }
 

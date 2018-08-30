@@ -33,3 +33,16 @@ char** get_args(char line[BUFFER_SIZE])
 
     return args;
 }
+
+void free_args(char** args)
+{
+    int i = 0;
+
+    while (args[i] != NULL)
+    {
+        free(args[i]);
+        i ++;
+    }
+
+    free(args);
+}

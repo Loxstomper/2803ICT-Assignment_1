@@ -113,6 +113,8 @@ void run(int sock, char message[BUFFER_SIZE], char** args)
     int count = 0;
     int save_to_file = 0;
 
+
+    /* find position of last argument */
     while (args[count] != NULL)
     {
         count ++;
