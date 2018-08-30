@@ -20,8 +20,10 @@ char** get_args(char line[BUFFER_SIZE])
     arg = strtok(temp, DELIM);
     while (arg != NULL)
     {
-        args[position] = arg;
-        printf("%d: %s\n", position, args[position]);
+        /* args[position] = arg; */
+        args[position] = malloc(ARG_BUFFER_SIZE * sizeof(char));
+        strcpy(args[position], arg);
+        /* printf("%d: %s\n", position, args[position]); */
         position ++;
         arg = strtok(NULL, DELIM);
     }

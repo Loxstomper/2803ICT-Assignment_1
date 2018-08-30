@@ -26,10 +26,10 @@ int main(int argc, char ** argv)
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (sock == -1)
+    if (sock < 1)
     {
-        printf("Could not create socket\n");
-        return -1;
+        perror("Could not create socket\n");
+        exit(1);
     }
 
     printf("Created socket\n");
@@ -41,8 +41,8 @@ int main(int argc, char ** argv)
 
     if (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0)
     {
-        printf("Connection Failed!\n");
-        return -1;
+        perror("Connection Failed!\n");
+        exit(1);
     }
 
     printf("Connected\n");
@@ -55,28 +55,38 @@ int main(int argc, char ** argv)
 
         printf("BUFFER: %s\n", message);
         args = get_args(message);
+
         /* message[strlen(message)] = ' '; */
-        printf("BUFFER: %s\n", message);
+        /* printf("BUFFER: %s\n", message); */
+        /* printf("ARG 0 : %s\n", args[0]); */
+        /* printf("ARG 1 : %s\n", args[1]); */
+        /* printf("ARG 2 : %s\n", args[2]); */
+
+        /* exit(1); */
 
 
         // some of the functions require the client to do stuff
         if (strcmp(args[0], "put") == 0)
         {
+            printf("{PUT CLIENT\n");
             put(sock, args);
         }
         else if (strcmp(args[0], "get") == 0)
         {
+            printf("GET CLIENT\n");
             get(sock, message);
             free(args);
         }
         else if (strcmp(args[0], "run") == 0)
         {
+            printf("RUN CLIENT");
             run(sock, message, args);
         }
         else if (strcmp(args[0], "quit") == 0)
         {
             free(args);
-            break;
+            send(sock, "quit", strlen("quit"), 0);
+            exit(1);
         }
         /* commands that are purely server sided */
         /* e.g. sys */
@@ -86,41 +96,64 @@ int main(int argc, char ** argv)
 
             if (send(sock, message, strlen(message), 0) < 0)
             {
-                printf("Send Failed!\n");
+                perror("Send Failed!\n");
                 exit(1);
             }
 
-            reply_length = recv(sock, reply, BUFFER_SIZE, 0);
+            /* ----------------- getting output -------------------------- */
+            usleep(1000);
+            read_data(sock);
 
-            if (reply_length < 0)
-            {
-                printf("Recv Failed!");
-                exit(1);
-            }
+            /* reply_length = recv(sock, reply, BUFFER_SIZE, 0); */
 
-            reply[strlen(reply) - 1] = '\0';
-            printf("\n%s", reply);
-            memset(&reply, '\0', strlen(reply));
+            /* if (reply_length < 0) */
+            /* { */
+            /*     printf("Recv Failed!"); */
+            /*     exit(1); */
+            /* } */
+
+            /* if (reply_length < BUFFER_SIZE) */
+            /* { */
+            /*     /1* gets rid of the terminating characterr *1/ */
+            /*     reply[strlen(reply) - 2] = '\0'; */
+            /* } */
+
+            /* printf("\n%s", reply); */
+            /* memset(&reply, '\0', strlen(reply)); */
+
+            /* while (reply_length > 0) */
+            /* { */
+            /*     recv(sock, reply, BUFFER_SIZE, 0); */
+            /*     printf("%s", reply); */
+            /* } */
 
             /* remember and not null terminating char */
-            while (reply_length == BUFFER_SIZE - 1)
-            {
-                printf("%s", reply);
-                memset(&reply, '\0', strlen(reply));
+            /* while (reply_length == BUFFER_SIZE) */
+            /* { */
+            /*     printf("%s", reply); */
+            /*     memset(&reply, '\0', strlen(reply)); */
 
 
-                reply_length = recv(sock, reply, BUFFER_SIZE, 0);
+            /*     reply_length = recv(sock, reply, BUFFER_SIZE, 0); */
 
-                char end = 4;
-                /* checks if the response is finished */
-                /* buffer is not full but server response is finished */
-                if (reply[strlen(reply)] == end) // 4 is decimal ascii for EOT - end of transmission
-                {
-                    printf("%s", reply);
-                    memset(&reply, '\0', strlen(reply));
-                    break;
-                }
-            }
+            /*     char end = '`'; */
+            /*     /1* checks if the response is finished *1/ */
+            /*     /1* buffer is not full but server response is finished *1/ */
+            /*     if (reply[strlen(reply)] == end) // 4 is decimal ascii for EOT - end of transmission */
+            /*     { */
+            /*         /1* reply[strlen(reply)] = '\0'; *1/ */
+            /*         printf("%s", reply); */
+            /*         memset(&reply, '\0', strlen(reply)); */
+            /*         break; */
+            /*     } */
+            /* } */
+
+            /* /1* remove the terminating character *1/ */
+            /* if (reply_length > 0) */
+            /* { */
+            /*     /1* removing the terminating character *1/ */
+            /*     reply[strlen(reply) - 2] = '\0'; */
+            /* } */
         }
 
         // output finished

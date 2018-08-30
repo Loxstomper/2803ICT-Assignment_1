@@ -5,6 +5,7 @@
 void put(int sock, char** args);
 void get(int sock, char message[BUFFER_SIZE]);
 void run(int sock, char message[BUFFER_SIZE], char** args);
+void read_data(int sock);
 
 
 

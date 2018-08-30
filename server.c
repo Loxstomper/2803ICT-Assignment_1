@@ -19,6 +19,7 @@ void sigintHandler(int sig_num)
 
 int main(int argc, char ** argv)
 {
+    /* ctrl+c */
     signal(SIGINT, sigintHandler);
 
 
@@ -62,7 +63,7 @@ int main(int argc, char ** argv)
 
     if(test < 0)
     {
-		printf("Bind error.\n"); 
+		perror("Bind error.\n"); 
 		exit(1);
 	}
 
@@ -74,7 +75,7 @@ int main(int argc, char ** argv)
 	}
     else
     {
-		printf("Bind error.\n");
+		perror("Bind error.\n");
         exit(1);
 	}
 
@@ -85,6 +86,7 @@ int main(int argc, char ** argv)
 
 		if(client_sock < 0)
         {
+            perror("client connection error\n");
 			exit(1);
 		}
 
@@ -94,10 +96,11 @@ int main(int argc, char ** argv)
 
         /* no zombies */
         signal(SIGCHLD, SIG_IGN);
+        /* look at rubens slides for this maybe slide 57 */
 
         /* this whole if used to be in a while loop */
-        while (1)
-        {
+        /* while (1) */
+        /* { */
         /* no need to have inner loop, the forked process only does one thing */
             /* i think ^ this is wrong, and I need the loop */
             if((childpid = fork()) == 0)
@@ -111,11 +114,13 @@ int main(int argc, char ** argv)
 
                 /* split into args */
                 args = get_args(buffer);
+                printf("ARG 0:%s|\n", args[0]);
 
 
                 if(strcmp(args[0], "quit") == 0)
                 {
                     printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
+                    exit(1);
                     break;
                 }
 
@@ -143,10 +148,11 @@ int main(int argc, char ** argv)
                 }
                 else
                 {
-                    char end = 4;
+                    /* this is a bad terminator */
+                    char end = '`';
                     strcpy(buffer, "unknown command");
                     buffer[strlen(buffer)] = end;
-                    buffer[strlen(buffer)] = '\0';
+                    buffer[strlen(buffer) + 1] = '\0';
 
                     send(client_sock, buffer, strlen(buffer), 0);
                 }                    
@@ -154,9 +160,9 @@ int main(int argc, char ** argv)
                 memset(&buffer, '\0', strlen(buffer));
 
                 close(client_sock);
+                /* check this */
             }
-
-        }
+        /* } */
     }
 
 	return 0;

@@ -118,17 +118,17 @@ void get(int client_sock, char** args)
     /* change this just to read the file for cross platform */ 
     FILE* f = fopen(path, "r");
 
-    int line_count = 0;
+    int line_count = 1;
 
     while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
-        line_count ++;
-        printf("%s", output_buffer);
+        /* printf("%s", output_buffer); */
         send(client_sock, output_buffer, strlen(output_buffer), 0);
+        usleep(100);
 
         if (line_count % 40 == 0)
         {
-            printf("\nWAITING\n\n");
+            /* printf("\nWAITING\n\n"); */
             /* put a recv call because thats blocking */
             /* get client to wait for the 40 lines and then do a scanf or something */
             /* dont even use the data though */
@@ -137,7 +137,10 @@ void get(int client_sock, char** args)
 
 
         memset(output_buffer, '\0', strlen(output_buffer));
+        line_count ++;
     }
+
+    send(client_sock, "`", strlen("`"), 0);
 
 
     printf("\n");
@@ -145,6 +148,8 @@ void get(int client_sock, char** args)
     free(input_buffer);
     free(output_buffer);
     free(args);
+
+    /* printf("FINISHED\n"); */
 }
 
 
@@ -215,6 +220,7 @@ void sys(int client_sock)
     while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
         send(client_sock, output_buffer, strlen(output_buffer), 0);
+        usleep(100);
         printf("%s", output_buffer);
         memset(output_buffer, '\0', strlen(output_buffer));
     }
