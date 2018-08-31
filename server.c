@@ -1,11 +1,13 @@
 #include "common.h"
 #include "server_func.h"
 
+#define DEBUG 1
+
 
 /* change error printf to perror */
 
 /* global variable :( */
-/* ave to for the sig handler */
+/* have to for the sig handler */
 int server_sock;
 
 void sigintHandler(int sig_num)
@@ -82,40 +84,50 @@ int main(int argc, char ** argv)
 	}
 
 
+    // constantly accept new connections
 	while (1)
     {
 		client_sock = accept(server_sock, (struct sockaddr*)&client_addr, &addr_size);
 
+        // no connectiong
 		if(client_sock < 0)
         {
-            perror("client connection error\n");
-			exit(1);
+            // perror("client connection error\n");
+			/* exit(1); */
+            continue;
 		}
 
 		printf("%s:%d connected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
+
+
+        // fork, wait for data and send response then quit
         if((childpid = fork()) == 0)
         {
             close(server_sock);
 
             recv(client_sock, buffer, BUFFER_SIZE, 0);
-            printf("SOCK: %d \n", client_sock);
 
             /* print what the user sent */
             printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
 
             /* split into args */
             args = get_args(buffer);
-            print_args(args);
+
+            if (DEBUG)
+            {
+                print_args(args);
+            }
 
             if(strcmp(args[0], "quit") == 0)
             {
                 printf("%s:%d disconnected\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
-                exit(1);
+                // exit(1);
                 break;
             }
 
 
+            // command list
             if (strcmp(args[0], "list") == 0)
             {
                 printf("LIST\n");
@@ -137,22 +149,24 @@ int main(int argc, char ** argv)
                     send(client_sock, buffer, strlen(buffer), 0);
                 }
             }
+            // was not in the command list so it is unknown
             else
             {
+                printf("INVALID COMMAND\n");
                 char end = '`';
                 strcpy(buffer, "unknown command");
                 buffer[strlen(buffer)] = end;
                 buffer[strlen(buffer) + 1] = '\0';
 
                 send(client_sock, buffer, strlen(buffer), 0);
+                printf("i sent INVALID COMMAND\n");
             }                    
             
+            // clean up the input buffer
             memset(&buffer, '\0', strlen(buffer));
-
         }
-    
-        /* close(client_sock); */
     }
+    close(client_sock);
 
 	return 0;
 }

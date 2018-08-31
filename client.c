@@ -23,6 +23,7 @@ int main(int argc, char ** argv)
 
     struct sockaddr_in server;
     size_t reply_length;
+    pid_t child_pid;
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -39,6 +40,7 @@ int main(int argc, char ** argv)
     server.sin_family = AF_INET;
     server.sin_port = htons(PORT);
 
+    // ----- parent connecting to see if valid server -------- //
     if (connect(sock, (struct sockaddr*)&server, sizeof(server)) < 0)
     {
         perror("Connection Failed!\n");
@@ -56,21 +58,14 @@ int main(int argc, char ** argv)
         /* printf("BUFFER: %s\n", message); */
         args = get_args(message);
 
-        /* message[strlen(message)] = ' '; */
-        /* printf("BUFFER: %s\n", message); */
-        /* printf("ARG 0 : %s\n", args[0]); */
-        /* printf("ARG 1 : %s\n", args[1]); */
-        /* printf("ARG 2 : %s\n", args[2]); */
-
-        /* exit(1); */
-
+        // user just pressed enter, no command
         if (args[0] == NULL)
         {
             continue;
         }
 
         /* fork here */
-
+        // create new connect
 
         // some of the functions require the client to do stuff
         if (strcmp(args[0], "put") == 0)
@@ -109,15 +104,18 @@ int main(int argc, char ** argv)
             }
 
             /* ----------------- getting output -------------------------- */
-            usleep(1000);
+            /* usleep(1000); */
             read_data(sock);
         }
 
         // output finished
         memset(&message, '\0', strlen(message));
         memset(&reply, '\0', strlen(reply));
+
+        
     }
 
+    // close the socket once the client has exited
     close(sock);
 
     return 0;

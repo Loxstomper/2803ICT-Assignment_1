@@ -2,13 +2,17 @@
 #include "common.h"
 #include <stdio.h>
 
+// will read data from server until the special terminating character is present
 void read_data(int sock)
 {
     char* buffer = malloc(BUFFER_SIZE * sizeof(char));
     static int reply_length;
 
+    // memset(buffer, '\0', 0);
+
     reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
     printf("%s", buffer);
+    memset(buffer, '\0', strlen(buffer));
 
     while (reply_length > 0 && buffer[strlen(buffer) -1] != '`')
     {
@@ -36,7 +40,7 @@ void read_data(int sock)
     free(buffer);
 }
 
-
+// put function
 void put(int sock, char** args)
 {
     printf("PUT FUNCTION ON CLIENT\n");
@@ -44,7 +48,7 @@ void put(int sock, char** args)
     free(args);
 }
 
-
+// get function
 void get(int sock, char message[BUFFER_SIZE])
 {
     printf("GET FUNCTION ON CLIENT\n");
@@ -106,6 +110,7 @@ void get(int sock, char message[BUFFER_SIZE])
 
 }
 
+// run function
 void run(int sock, char message[BUFFER_SIZE], char** args)
 {
     printf("RUN FUNCTION ON CLIENT\n");

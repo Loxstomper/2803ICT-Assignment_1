@@ -220,12 +220,13 @@ void sys(int client_sock)
     while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
         send(client_sock, output_buffer, strlen(output_buffer), 0);
-        usleep(100);
         printf("%s", output_buffer);
+        usleep(1000);
         memset(output_buffer, '\0', strlen(output_buffer));
     }
 
-    printf("EXITING SYS\n");
+    usleep(100);
+    send(client_sock, "PLEASE`", sizeof("PLEASE`"), 0);
 
     free(output_buffer);
 }
