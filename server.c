@@ -158,6 +158,7 @@ int main(int argc, char ** argv)
                 buffer[strlen(buffer)] = end;
                 buffer[strlen(buffer) + 1] = '\0';
 
+                usleep(200);
                 send(client_sock, buffer, strlen(buffer), 0);
                 printf("i sent INVALID COMMAND\n");
             }                    

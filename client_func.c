@@ -1,10 +1,13 @@
 #include "client_func.h"
 #include "common.h"
 #include <stdio.h>
+#include <dirent.h>
 
 // will read data from server until the special terminating character is present
 void read_data(int sock)
 {
+    printf("IN READ DATA FUNCTION\n");
+
     char* buffer = malloc(BUFFER_SIZE * sizeof(char));
     static int reply_length;
 
@@ -16,6 +19,22 @@ void read_data(int sock)
 
     while (reply_length > 0 && buffer[strlen(buffer) -1] != '`')
     {
+        // this is really bad
+
+        int i = 0;
+
+        for (int i = 0; i < BUFFER_SIZE && buffer[i] != '\0'; i ++)
+        {
+            if (buffer[i] == '`')
+            {
+                printf("\nEND\n");
+            }
+        }
+
+
+
+
+
         reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
 
 

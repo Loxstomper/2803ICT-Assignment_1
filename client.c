@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
         }
 
         /* fork here */
-        // create new connect
+            // create new connect
 
         // some of the functions require the client to do stuff
         if (strcmp(args[0], "put") == 0)

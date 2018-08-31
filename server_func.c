@@ -1,4 +1,5 @@
 #include "server_func.h"
+#include <dirent.h>
 
 #define ARG_BUFFER_SIZE 64
 
@@ -78,7 +79,7 @@ void list(int client_sock, char** args)
     printf("COMMAND: %s\n", command);
     FILE* f = popen(command, "r");
 
-    free(args);
+    free_args(args);
     free(command);
     
     if (!f)
@@ -198,6 +199,9 @@ void put(int client_sock, char ** args)
         {
             fprintf(fp, input_buffer);
             memset(&input_buffer, '\0', strlen(input_buffer));
+            recv(client_sock, input_buffer, BUFFER_SIZE, 0);
+
+            // might need some sleeps in here
         }
 
         fclose(fp);
@@ -221,7 +225,7 @@ void sys(int client_sock)
     {
         send(client_sock, output_buffer, strlen(output_buffer), 0);
         printf("%s", output_buffer);
-        usleep(1000);
+        // usleep(1000); doesnt seem to work ROFL
         memset(output_buffer, '\0', strlen(output_buffer));
     }
 
@@ -231,6 +235,101 @@ void sys(int client_sock)
     free(output_buffer);
 }
 
+void run(int client_sock, char** args)
+{
+    static char* base_dir = "./programs/";
+    // check if cc works
+    static char* base_command = "cc *.c -o ";
+    char* program_dir = malloc(sizeof(base_dir) + sizeof(args[1]) + 2);
+    strcpy(program_dir, base_dir);
+    strcat(program_dir, args[1]);
+
+    char* executable = malloc(sizeof(program_dir) + sizeof(args[1]) + 2);
+    strcpy(executable, program_dir);
+    strcat(executable, args[1]);
+
+
+    // going to remove the -f from the args by making it null on the client side
+    // count the number of args
+    int arg_count = 0; 
+    while (args[arg_count] != NULL)
+    {
+        arg_count ++;
+    }
+
+    arg_count -=2; // first 2 args are run, progname 
+
+    char* program_args = malloc(sizeof(ARG_BUFFER_SIZE) * arg_count + arg_count); // + arg count for spaces
+
+    for (int i = 2; i < arg_count; i ++)
+    {
+        strcat(program_args, args[i]);
+        strcat(program_args, " ");
+        // remember the null character - might need to remove it
+    }
+
+
+    int executable_exists = 0;
+    int compile_needed = 1;
+    
+    // check if program needs to be compiled
+    // could just do this with grep, but doing the C way for the assignment :)
+    struct dirent *de;
+
+    DIR *dr = opendir(program_dir);
+
+    if (dr == NULL)
+    {
+        printf("PROGRAM FOLDER DOESNT EXIST\n");
+        return;
+    }
+
+    // iterate through the directory and see if an executable name the same as the program exists
+    while ((de = readdir(dr)) != NULL)
+    {
+        if (strcmp(de->d_name, args[1]) == 0)
+        {
+            executable_exists = 1;
+            break;
+        }
+    }
+
+    // need to check the date of the executable vs the source files
+    if (executable_exists)
+    {
+        // check if its newer than any of the source files
+        compile_needed = 1;
+        // we having 1 as the default so check the opposite and set to 0
+    }
+
+    if (compile_needed)
+    {
+        char* command = malloc(sizeof(base_command) + sizeof(args[1]) + 2);
+        strcpy(command, base_command);
+        strcat(command, args[1]);
+
+        FILE* f = popen(command, "r");
+        fclose(f);
+
+        // maybe check if it worked?
+    }
+
+    // now actually run the program
+    // need to use exec or something
+
+// sonmething like this    exec(program_dir, program_args);
+// actually maybe popen so we can the output and send back to user
+
+
+    // do the line by line and finish with the terminator character, dont forget to sleep
+
+    closedir(dr);
+
+
+    free(program_dir);
+    free(executable);
+    free_args(args);
+}
 
 
 void print_args(char** args)
