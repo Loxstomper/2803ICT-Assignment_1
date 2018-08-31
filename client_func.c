@@ -7,7 +7,8 @@ void read_data(int sock)
     char* buffer = malloc(BUFFER_SIZE * sizeof(char));
     static int reply_length;
 
-    reply_length = 0;
+    reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
+    printf("%s", buffer);
 
     while (reply_length > 0 && buffer[strlen(buffer) -1] != '`')
     {

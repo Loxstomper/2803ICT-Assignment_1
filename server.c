@@ -42,7 +42,7 @@ int main(int argc, char ** argv)
 
 	if (server_sock < 0)
     {
-		printf("Server socket creation error.\n");
+		perror("Server socket creation error.\n");
 		exit(1);
 	}
 	printf("Server socket created.\n");
@@ -51,8 +51,8 @@ int main(int argc, char ** argv)
 	server_addr.sin_port = htons(PORT);
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+    /* allows binding to already open port */
     int yes=1;
-
     if (setsockopt(server_sock,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof yes) == -1) 
     {
         perror("setsockopt");
@@ -77,7 +77,7 @@ int main(int argc, char ** argv)
 	}
     else
     {
-		perror("Bind error.\n");
+		perror("Listen error.\n");
         exit(1);
 	}
 
@@ -100,14 +100,13 @@ int main(int argc, char ** argv)
 
             recv(client_sock, buffer, BUFFER_SIZE, 0);
             printf("SOCK: %d \n", client_sock);
-            send(client_sock, buffer, strlen(buffer), 0);
-            continue;
 
             /* print what the user sent */
             printf("%s:%d: %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), buffer);
 
             /* split into args */
             args = get_args(buffer);
+            print_args(args);
 
             if(strcmp(args[0], "quit") == 0)
             {
@@ -152,7 +151,7 @@ int main(int argc, char ** argv)
 
         }
     
-        close(client_sock);
+        /* close(client_sock); */
     }
 
 	return 0;

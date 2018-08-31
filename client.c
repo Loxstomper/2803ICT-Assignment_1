@@ -53,7 +53,7 @@ int main(int argc, char ** argv)
         printf("\nRequest: ");
         fgets(message, BUFFER_SIZE, stdin);
 
-        printf("BUFFER: %s\n", message);
+        /* printf("BUFFER: %s\n", message); */
         args = get_args(message);
 
         /* message[strlen(message)] = ' '; */
@@ -63,6 +63,13 @@ int main(int argc, char ** argv)
         /* printf("ARG 2 : %s\n", args[2]); */
 
         /* exit(1); */
+
+        if (args[0] == NULL)
+        {
+            continue;
+        }
+
+        /* fork here */
 
 
         // some of the functions require the client to do stuff

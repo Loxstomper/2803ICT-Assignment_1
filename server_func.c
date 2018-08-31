@@ -238,7 +238,7 @@ void print_args(char** args)
 
     while (args[pos] != NULL)
     {
-        printf("%s ", args[pos]);
+        printf("%s\n", args[pos]);
         pos ++;
     }
     printf("\n");
