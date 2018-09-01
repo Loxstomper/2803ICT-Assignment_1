@@ -95,7 +95,7 @@ void get(int sock, char message[BUFFER_SIZE])
     {
         if (line_count % 40 == 0)
         {
-            printf("WAITING\n");
+            printf("[MORE]\n");
             /* tmp = getchar(); */
             getchar();
             /* scanf(""); */
