@@ -261,6 +261,7 @@ void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
     /* figure out if going to print the output or save to file */
     int count = 0;
     int save_to_file = 0;
+    char* file_path;
 
 
     /* find position of last argument */
@@ -269,13 +270,31 @@ void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
         count ++;
     }
 
-    if (strcmp(args[count - 1], "-f") == 0)
+    // run prog [args] [-f file]
+
+    // i always write the file, how would you tell if the last paramter was a file?
+    // you could but check if there was a file extension, but what if the user did
+    // not put a file extension? it would be treated as an argument 
+    // the -f flag is required for saving the output to file
+
+
+    // if (strcmp(args[count - 1], "-f") == 0)
+    if (args[count - 2][0] == '-' && args[count - 2][1] == 'f')
     {
         save_to_file = 1;   
-        // removing the -f arg from the message
+
+        file_path = (char*) malloc(sizeof(char) * BUFFER_SIZE);
+        strcpy(file_path, args[count - 1]);
+
+        printf("FILE PATH: %s\n", file_path);
+
+        // removing the -f arg from the message and file_path
         // assuming no trailing whitespace
-        message[strlen(message) - 3] = '\0';
+        message[strlen(message) - strlen(file_path) - 5] = '\0';
+        printf("MESSAGE: %s\n", message);
     }
+    // also need to check for filename
+    // how do we know its a file?
 
     // send message the the server
     send(sock, message, strlen(message), 0);
@@ -285,8 +304,46 @@ void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
     {
         read_data(sock);
     }
+    // very similar to read_data but save to file
+    else
+    {
 
-    printf("%s\n", buffer);
+        memset(buffer, '\0', 0);
+
+        int  reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
+        FILE* fp = fopen(args[1], "w");
+
+
+        // check if this was the whole message
+        if (buffer[strlen(buffer) - 1] == '`')
+        {
+            // printf("ONLY A SHORT MESSAGE\n");
+            buffer[strlen(buffer) - 1] = '\0';
+            fprintf(fp, "%s\n", buffer);
+            free(buffer);
+            return;
+        }
+
+        while (reply_length > 0)
+        {
+            if (buffer[strlen(buffer) - 1] == '`')
+            {
+                buffer[strlen(buffer) - 1] = '\0';
+                fprintf(fp, "%s", buffer);
+                break;
+            }
+
+            printf("%s", buffer);
+            memset(buffer, '\0', strlen(buffer));
+
+            reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
+        }
+
+        fclose(fp);
+
+    }
+
+    // printf("%s\n", buffer);
 
 
     free(args);

@@ -335,25 +335,17 @@ void run_prog(int client_sock, char** args)
     printf("IN RUN_PROG FUNCTION\n");
     static char* base_dir = "./programs/";
     // check if cc works
-    static char* base_command = "cc *.c -o ";
+    static char* base_compile_command = "cc -o ";
     char* program_dir = malloc(sizeof(base_dir) + sizeof(args[1]) + 2);
     strcpy(program_dir, base_dir);
     strcat(program_dir, args[1]);
 
-    printf("FIRST MALLOC?\n");
 
     char* executable = malloc(sizeof(program_dir) + sizeof(args[1]) + 2);
     strcpy(executable, program_dir);
     strcat(executable, "/");
     strcat(executable, args[1]);
     
-    printf("SECOND MALLOC?\n");
-
-    printf("IMBEtWEEN 2 printf\n");
-
-    // sanity checking
-    printf("EXECUTABLE PATH: %s\n", executable);
-
 
     // going to remove the -f from the args by making it null on the client side
     // count the number of args
@@ -363,20 +355,25 @@ void run_prog(int client_sock, char** args)
         arg_count ++;
     }
 
-    arg_count -=2; // first 2 args are run, progname 
+    printf("NUMBER OF ARGS: %d\n", arg_count);
+
 
     char* program_args = malloc(sizeof(ARG_BUFFER_SIZE) * arg_count + arg_count); // + arg count for spaces
 
-    for (int i = 2; i < arg_count; i ++)
+    program_args[0] = '\0';
+
+    // first 2 args are run and progname
+    for (int i = 0; i < arg_count - 2; i ++)
     {
-        strcat(program_args, args[i]);
+        strcat(program_args, args[i + 2]);
         strcat(program_args, " ");
         // remember the null character - might need to remove it
     }
 
+    printf("PROGRAM ARGS: %s\n", program_args);
+
 
     int executable_exists = 0;
-    // CHANGE THIS to 0 maybe
     int compile_needed = 1;
     
     // check if program needs to be compiled
@@ -408,13 +405,23 @@ void run_prog(int client_sock, char** args)
         // check if its newer than any of the source files
         compile_needed = 1;
         // we having 1 as the default so check the opposite and set to 0
+
     }
 
     if (compile_needed)
     {
-        char* command = malloc(sizeof(base_command) + sizeof(args[1]) + 2);
-        strcpy(command, base_command);
+        char* command = malloc(sizeof(base_compile_command) + sizeof(args[1]) + 500);
+        strcpy(command, base_compile_command);
+        strcat(command, program_dir);
+        strcat(command, "/");
         strcat(command, args[1]);
+        strcat(command, " ");
+        strcat(command, program_dir);
+        strcat(command, "/*.c");
+        
+        // cc -o ./programs/progname ./programs/progname/*.c
+
+        printf("COMPILE COMMAND: %s\n", command);
 
         FILE* f = popen(command, "r");
         fclose(f);
@@ -423,10 +430,24 @@ void run_prog(int client_sock, char** args)
     }
 
     // now actually run the program
-    printf("\nYO bIG NIBBA IM RUNNING THE FILE NOW\n");
-    // FILE* f = popen(executable, "r");
+    strcat(executable, " ");
+    strcat(executable, program_args);
+    
+    printf("EXECUTABLE: %s\n", executable);
+    FILE* f = popen(executable, "r");
 
-    // fclose(f);
+    char* prog_output = malloc(sizeof(char) * BUFFER_SIZE);
+
+    while (fgets(prog_output, BUFFER_SIZE, f) != NULL)
+    {
+        printf("%s", prog_output);
+        send(client_sock, prog_output, strlen(prog_output), 0);
+        memset(prog_output, '\0', strlen(prog_output));
+    }
+
+    send(client_sock, "`", strlen("`"), 0);
+
+    fclose(f);
 
     // need to use exec or something
 
