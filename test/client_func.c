@@ -101,7 +101,23 @@ void put_client(int sock, char message[BUFFER_SIZE], char** args)
 
     printf("BUFFER: %s\n", buffer);
 
+    char* input_buffer = malloc(sizeof(char) * BUFFER_SIZE);
+
     // now send contents to server
+    for (int i = 0; i < file_count; i ++)
+    {
+        fp = fopen(args[i + 2], "r");
+
+
+        while(fgets(input_buffer, BUFFER_SIZE, fp) != NULL)
+        {
+            printf("%s", input_buffer);
+            send(sock, input_buffer, strlen(input_buffer), 0);
+            memset(input_buffer, '\0', strlen(input_buffer));
+        }
+
+        fclose(fp);
+    }
 
 
     free_args(args);

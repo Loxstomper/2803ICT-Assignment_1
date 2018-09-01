@@ -179,6 +179,7 @@ void put_prog(int client_sock, char ** args)
     static char* base_path = "./programs/";
     char* prog_path;
     char* file_path;
+    char* buffer = malloc(sizeof(char) * BUFFER_SIZE);
 
 
     for (arg_count = 0; args[arg_count] != NULL; arg_count ++)
@@ -215,9 +216,23 @@ void put_prog(int client_sock, char ** args)
             strcat(command, prog_path);
 
             printf("DELETE %s\n", command);
-            // FILE* f = popen(command);
-            // fclose(f);
+            FILE* f = popen(command, "r");
+            fclose(f);
+
+            strcpy(command, "mkdir ");
+            strcat(command, prog_path);
+
+            f = popen(command, "r");
+
+            fclose(f);
+
+
             free(command);
+        }
+        else
+        {
+            send(client_sock, "Program directory exists", sizeof("Program directory exists"), 0);
+            return;
         }
     }
     else if (ENOENT == errno)
@@ -230,8 +245,8 @@ void put_prog(int client_sock, char ** args)
         strcat(command, prog_path);
 
         printf("MAKE %s\n", command);
-        // FILE* f = popen(command);
-        // fclose(f);
+        FILE* f = popen(command, "r");
+        fclose(f);
         free(command);
     }
     else
@@ -245,78 +260,45 @@ void put_prog(int client_sock, char ** args)
 
     file_path = (char*) malloc(sizeof(prog_path) + 100);
 
+    int length;
     for (int i = 0; i < file_count; i ++)
     {
+        strcpy(file_path, prog_path);
+        strcat(file_path, args[i + 2]);
 
-        // read in the file - filename is args[2 + i]
-        printf("READING file [%d/%d] %s \n", i + 1, file_count, args[2 + i]);
-    }
+        printf("READING file [%d/%d] %s \n", i + 1, file_count, file_path);
 
-    return;
+        FILE* fp = fopen(file_path, "w");
 
-
-
-
-
-
-
-
-
-
-
-
-    // this is lame but oh well
-    static char* mkdir = "mkdir ./programs/";
-
-    char* input_buffer = malloc(BUFFER_SIZE * sizeof(char));
-    char* command;
-    char* path;
-
-    command = (char*) malloc(sizeof(mkdir) + sizeof(args[1]) + 4);
-    strcpy(command, mkdir);
-    strcat(command, args[1]);
-
-    FILE* f = popen(command, "r");
-
-    path = (char*) malloc(sizeof(base_path) + sizeof(args[1]) + sizeof(args[2]) + 8);
-    strcpy(path, base_path);
-    strcat(path, args[1]);
-    strcat(path, "/");
-    strcat(path, args[2]);
-
-    // check if file exists
-    int file_exits = (access(path, F_OK) != -1);
-
-    if (file_exits && !forced)
-    {
-        printf("FILE EXISTS AND NOT FORCED MODE: %s \n", path);
-    }
-    // file doesnt exist, or it does and force mode is on
-    else
-    {
-        FILE* fp = fopen(path, "w");
-
-        // read until eof and write to file
-        recv(client_sock, input_buffer, BUFFER_SIZE, 0);
-
-        while (input_buffer[strlen(input_buffer)] != EOF)
+        length = 1;
+        while (length > 0)
         {
-            fprintf(fp, input_buffer);
-            memset(&input_buffer, '\0', strlen(input_buffer));
-            recv(client_sock, input_buffer, BUFFER_SIZE, 0);
+            memset(buffer, '\0', strlen(buffer));
 
-            // might need some sleeps in here
+            length = recv(client_sock, buffer, BUFFER_SIZE, 0);
+            printf("LENGTH: %d\n", length);
+            fprintf(fp, "%s", buffer);
+            printf("%s", buffer);
+
+            if (buffer[strlen(buffer)] == EOF)
+            {
+                printf("END OF FILE\n");
+                break;
+            }
+
         }
 
         fclose(fp);
 
+
+
     }
 
-    free(input_buffer);
-    free(command);
-    free(path);
-    free(args);
+    free(buffer);
+    free(file_path);
+    free_args(args);
 }
+
 
 void sys(int client_sock)
 {
