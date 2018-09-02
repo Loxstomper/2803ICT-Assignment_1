@@ -23,3 +23,6 @@ server_func.o: server_func.c
 
 clean:
 	rm -rf *.o *.gch client server
+
+docs:
+	doxygen

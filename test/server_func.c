@@ -366,6 +366,7 @@ void sys(int client_sock)
         printf("FINISHED\n");
 }
 
+
 void run_prog(int client_sock, char** args)
 {
     // check for valid command before doing other stuff
@@ -446,9 +447,13 @@ void run_prog(int client_sock, char** args)
         }
     }
 
+    printf("EXE EXISTS: %d\n", executable_exists);
     // need to check the date of the executable vs the source files
     if (executable_exists)
     {
+        if (DEBUG)
+            printf("EXECUTABLE EXISTS\n");
+
         // check if its newer than any of the source files
         const char* date_check_command = "ls -Art ";
         char* actual_command = malloc(sizeof(char) * BUFFER_SIZE);
@@ -464,14 +469,14 @@ void run_prog(int client_sock, char** args)
         FILE* date_p = popen(actual_command, "r");
 
         fgets(out, BUFFER_SIZE, date_p);
-        printf("output from ls: %s\n", out);
-
         fclose(date_p);
 
-        // we having 1 as the default so check the opposite and set to 0
+        // remove the \n char
+        out[strlen(out) - 1] = '\0';
 
         if (DEBUG)
         {
+            printf("output from ls: %s\n", out);
             printf("Most recent file: %s\n", out);
         }
 
@@ -484,10 +489,14 @@ void run_prog(int client_sock, char** args)
         free(out);
     }
 
-    if (DEBUG)
-        printf("Compile needed: %s\n", compile_needed);
+    printf("COMPILE NEEDED? %d\n", compile_needed);
 
-    if (compile_needed)
+    if (DEBUG)
+        printf("Compile needed: %d\n", compile_needed);
+
+    // CODE IS STOPPING HERE
+    printf("EXE NOT EXIST OR COMPILE NEEDED?: %d\n", (!executable_exists || compile_needed));
+    if (!executable_exists || compile_needed)
     {
         char* command = malloc(sizeof(base_compile_command) + sizeof(args[1]) + 500);
         strcpy(command, base_compile_command);

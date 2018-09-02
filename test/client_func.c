@@ -308,12 +308,12 @@ void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
     // send message the the server
     send(sock, message, strlen(message), 0);
 
-
     if (save_to_file == 0)
     {
         fclose(fp);
         // for some reason i am getting "Fatal error: glibc detected an invalid stdio handle"
         // even though i use read_data() throughout the client and it doesnt happen there
+        // this isnt working :'( it was before
         read_data(sock);
     }
     // very similar to read_data but save to file

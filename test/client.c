@@ -12,8 +12,8 @@ int main(int argc, char ** argv)
     } 
 
 
-    char* todo = "get the server complining if needed, write some comments saying ik i should have done some C way with comparing times
-                  , clean up some of the messages the client/server generates, have another look at get command, figure out why client is
+    char todo[] = "get the server complining if needed, write some comments saying ik i should have done some C way with comparing times \
+                  , clean up some of the messages the client/server generates, have another look at get command, figure out why client is \
                   not recieving the output when a program is ran, documentaion, DOXYGEN";
     printf("TODO: %s\n", todo);
 
@@ -113,6 +113,8 @@ int main(int argc, char ** argv)
             else if (strcmp(args[0], "run") == 0)
             {
                 // printf("RUN CLIENT");
+                printf("Just a heads up it will save output to file, but wont print to the screen this is explained in server_func.c in the prog_run server\n\
+                just type the next command you want\n");
                 run_prog_client(new_sock, message, args);
             }
 
