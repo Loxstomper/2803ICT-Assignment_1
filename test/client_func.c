@@ -54,16 +54,16 @@ void put_client(int sock, char message[BUFFER_SIZE], char** args)
     int file_count;
     int forced = 0;
 
+    // counting the number of args
     for (arg_count = 0; args[arg_count] != NULL; arg_count ++)
     {
-        printf("[%d] %s\n", arg_count, args[arg_count]);
+       // printf("[%d] %s\n", arg_count, args[arg_count]);
     }
 
     forced = (strcmp(args[arg_count - 1], "-f") == 0);
     file_count = arg_count - 2 - forced;
 
     printf("FILE COUNT %d\n", file_count);
-
 
     if (file_count < 1)
     {
@@ -72,16 +72,16 @@ void put_client(int sock, char message[BUFFER_SIZE], char** args)
     }
 
     FILE* fp;
-    // should also check to make sure all local files exists
+
     for (int i = 0; i < file_count; i ++)
     {
-        // args[i + 2]
         fp = fopen(args[i + 2], "r");
 
         if (fp == NULL)
         {
             printf("%s does not exist\n", args[i + 2]);
             free(buffer);
+            fclose(fp);
             return;
         }
 
@@ -107,7 +107,6 @@ void put_client(int sock, char message[BUFFER_SIZE], char** args)
     for (int i = 0; i < file_count; i ++)
     {
         fp = fopen(args[i + 2], "r");
-
 
         while(fgets(input_buffer, BUFFER_SIZE, fp) != NULL)
         {
@@ -197,7 +196,6 @@ void get_client(int sock, char message[BUFFER_SIZE])
     /* send that we want to get the file contents */
     send(sock, message, strlen(message), 0);    
     
-
     reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
 
     // check if this was the whole message
@@ -223,15 +221,15 @@ void get_client(int sock, char message[BUFFER_SIZE])
         }
         
         // wait every 40 lines
-        printf("[%d] ", line_count % 40);
+        // printf("[%d] ", line_count % 40);
         if (line_count % 40 == 0)
         {
-            printf("[MORE]\n");
+            printf("[MORE]");
             // blocking functions
+            // the old commented out funcion worked better this one you have to spam enter a few times
             getchar();
 
-            // remove the more from the screen
-
+            // remove the [more] from the screen
             for(int i = 0; i < 6; i ++)
             {
                 printf("\b");

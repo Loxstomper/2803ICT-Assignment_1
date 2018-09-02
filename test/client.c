@@ -1,20 +1,21 @@
 #include "common.h"
 #include "client.h"
 #include "client_func.h"
-#include <sys/time.h>
-
-
-/* use signals to check for ctrl+c and run quit function */
-
 
 int main(int argc, char ** argv)
 {
     
-    /* if (argc != 2) */
-    /* { */
-    /*     printf("./client IP\n"); */
-    /*     return 1; */
-    /* } */
+    if (argc != 2) 
+    { 
+         printf("./Client IP\n");
+         return 1;
+    } 
+
+
+    char* todo = "get the server complining if needed, write some comments saying ik i should have done some C way with comparing times
+                  , clean up some of the messages the client/server generates, have another look at get command, figure out why client is
+                  not recieving the output when a program is ran, documentaion, DOXYGEN";
+    printf("TODO: %s\n", todo);
 
 
     char    message[BUFFER_SIZE], reply[BUFFER_SIZE];
@@ -42,8 +43,8 @@ int main(int argc, char ** argv)
 
     printf("Created socket\n");
 
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
-    /* server.sin_addr.s_addr = inet_addr(argv[1]); */
+    // server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_addr.s_addr = inet_addr(argv[1]);
     server.sin_family = AF_INET;
     server.sin_port = htons(PORT);
 

@@ -16,6 +16,7 @@
 #define BUFFER_SIZE 1024
 #define ARG_BUFFER_SIZE 64
 #define DELIM " \t\n\r"
+#define DEBUG 1 
 
 char** get_args(char line[BUFFER_SIZE]);
 void free_args(char** args);

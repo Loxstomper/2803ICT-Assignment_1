@@ -14,14 +14,19 @@ void list(int client_sock, char** args)
         exit(1);
     }
 
-    printf("RUNNING LIST COMMAND\n");
-    printf("ARGS ARE: \n");
+    if (DEBUG)
+    {
+        printf("RUNNING LIST COMMAND\n");
+        printf("ARGS ARE: \n");
+    }
 
     int arg_length = 0;
 
     while (args[arg_length] != NULL)
     {
-        printf("%d : %s \n", arg_length, args[arg_length]);
+        if (DEBUG)
+            printf("%d : %s \n", arg_length, args[arg_length]);
+
         arg_length ++;
     }
 
@@ -35,7 +40,8 @@ void list(int client_sock, char** args)
         //getting some garbage data
         if (args[2] == NULL)
         {
-            printf("LONG LIST AND NO PROGRAM SPECIFIED\n");
+            if (DEBUG)
+                printf("LONG LIST AND NO PROGRAM SPECIFIED\n");
 
             command = (char*) malloc(sizeof(base_command) + 4);
             strcpy(command, base_command);
@@ -45,7 +51,8 @@ void list(int client_sock, char** args)
         /* long list program name specified */
         else
         {
-            printf("LONG LIST AND PROGRAM SPECIFIED\n");
+            if (DEBUG)
+                printf("LONG LIST AND PROGRAM SPECIFIED\n");
 
             command = (char*) malloc(sizeof(base_command) + 5 + sizeof(args[2]));
             strcpy(command, base_command);
@@ -55,7 +62,8 @@ void list(int client_sock, char** args)
     }
     else
     {
-        printf("NORMAL LIST\n");
+        if (DEBUG)
+            printf("NORMAL LIST\n");
 
         /* list all programs */
         if (args[1] == NULL)
@@ -73,7 +81,9 @@ void list(int client_sock, char** args)
         }
     }
 
-    printf("COMMAND: %s\n", command);
+    if (DEBUG)
+        printf("COMMAND: %s\n", command);
+
     FILE* f = popen(command, "r");
 
     free_args(args);
@@ -88,7 +98,10 @@ void list(int client_sock, char** args)
     while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
         send(client_sock, output_buffer, strlen(output_buffer), 0);
-        printf("%s", output_buffer);
+
+        if (DEBUG)
+            printf("%s", output_buffer);
+
         memset(output_buffer, '\0', strlen(output_buffer));
     }
 
@@ -98,7 +111,8 @@ void list(int client_sock, char** args)
 
 void get(int client_sock, char** args)
 {
-    printf("IN GET FUNCTION\n");
+    if (DEBUG)
+        printf("IN GET FUNCTION\n");
 
     // check if command is valid before doing the other stuff
     if (args[2] == NULL)
@@ -114,7 +128,8 @@ void get(int client_sock, char** args)
 
     char* input_buffer = malloc(16 * sizeof(char));
 
-    printf("PROGRAM: %s | FILE: %s\n", args[1], args[2]);
+    if (DEBUG)
+        printf("PROGRAM: %s | FILE: %s\n", args[1], args[2]);
 
     path = (char*) malloc(sizeof(base_dir) + 1 + sizeof(args[1]) + 1 + sizeof(args[2]) + 1 + 10);
     strcpy(path, base_dir);
@@ -122,7 +137,9 @@ void get(int client_sock, char** args)
     strcat(path, "/");
     strcat(path, args[2]);
 
-    printf("PATH: %s\n", path);
+    if (DEBUG)
+        printf("PATH: %s\n", path);
+
     FILE* f = fopen(path, "r");
 
     if (f == NULL)
@@ -136,14 +153,16 @@ void get(int client_sock, char** args)
 
     while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
-        printf("%s", output_buffer);
+        if (DEBUG)
+            printf("%s", output_buffer);
         int z = send(client_sock, output_buffer, strlen(output_buffer), 0);
         usleep(200);
 
 
         if (line_count % 40 == 0)
         {
-            printf("\nWAITING\n\n");
+            if (DEBUG)
+                printf("\nWAITING\n\n");
             /* put a recv call because thats blocking */
             /* get client to wait for the 40 lines and then do a scanf or something */
             /* dont even use the data though */
@@ -184,30 +203,37 @@ void put_prog(int client_sock, char ** args)
 
     for (arg_count = 0; args[arg_count] != NULL; arg_count ++)
     {
-        printf("[%d] %s\n", arg_count, args[arg_count]);
+        if (DEBUG)
+            printf("[%d] %s\n", arg_count, args[arg_count]);
     }
 
     forced = (strcmp(args[arg_count -1], "-f") == 0);
     file_count = arg_count - 2 - forced;
 
-    printf("Number of files: %d\n", file_count);
+    if (DEBUG)
+        printf("Number of files: %d\n", file_count);
 
     prog_path = (char*) malloc(sizeof(base_path) + sizeof(args[1]) + 5);
     strcpy(prog_path, base_path);
     strcat(prog_path, args[1]);
     strcat(prog_path, "/");
 
-    printf("Prog path: %s\n", prog_path);
+    if (DEBUG)
+        printf("Prog path: %s\n", prog_path);
 
     // check if the program directory exists, if it does and not forced end
     DIR* d = opendir(prog_path);
     int exists = 0;
-    printf("EXISTS %d\n", exists);
+
+    if (DEBUG)
+        printf("EXISTS %d\n", exists);
 
     if (d)
     {
         exists = 1;
-        printf("Directory exists, force mode?: %d\n", forced);
+
+        if (DEBUG)
+            printf("Directory exists, force mode?: %d\n", forced);
 
         if (forced)
         {
@@ -215,7 +241,9 @@ void put_prog(int client_sock, char ** args)
             strcpy(command, "rm -r ");
             strcat(command, prog_path);
 
-            printf("DELETE %s\n", command);
+            if (DEBUG)
+                printf("DELETE %s\n", command);
+
             FILE* f = popen(command, "r");
             fclose(f);
 
@@ -238,20 +266,26 @@ void put_prog(int client_sock, char ** args)
     else if (ENOENT == errno)
     {
         exists = 0;
-        printf("Directory does not exist\n");
+
+        if (DEBUG)
+            printf("Directory does not exist\n");
 
         char* command = malloc(sizeof(char) * 100);
         strcpy(command, "mkdir ");
         strcat(command, prog_path);
 
-        printf("MAKE %s\n", command);
+        if (DEBUG)
+            printf("MAKE %s\n", command);
+
         FILE* f = popen(command, "r");
         fclose(f);
         free(command);
     }
     else
     {
-        printf("Problem opening directory\n");
+        if (DEBUG)
+            printf("Problem opening directory\n");
+
         send(client_sock, "Error opening directory", sizeof("Error opening directory"), 0);
         return;
     }
@@ -266,7 +300,8 @@ void put_prog(int client_sock, char ** args)
         strcpy(file_path, prog_path);
         strcat(file_path, args[i + 2]);
 
-        printf("READING file [%d/%d] %s \n", i + 1, file_count, file_path);
+        if (DEBUG)
+            printf("READING file [%d/%d] %s \n", i + 1, file_count, file_path);
 
         FILE* fp = fopen(file_path, "w");
 
@@ -276,22 +311,26 @@ void put_prog(int client_sock, char ** args)
             memset(buffer, '\0', strlen(buffer));
 
             length = recv(client_sock, buffer, BUFFER_SIZE, 0);
-            printf("LENGTH: %d\n", length);
+            
             fprintf(fp, "%s", buffer);
-            printf("%s", buffer);
+
+            if (DEBUG)
+            {
+                printf("LENGTH: %d\n", length);
+                printf("%s", buffer);
+            }
 
             if (buffer[strlen(buffer)] == EOF)
             {
-                printf("END OF FILE\n");
+                if (DEBUG)
+                    printf("END OF FILE\n");
+
                 break;
             }
 
         }
 
         fclose(fp);
-
-
-
     }
 
     free(buffer);
@@ -312,14 +351,19 @@ void sys(int client_sock)
     while (fgets(output_buffer, BUFFER_SIZE, f) != NULL)
     {
         send(client_sock, output_buffer, strlen(output_buffer), 0);
-        printf("%s", output_buffer);
+
+        if (DEBUG)
+            printf("%s", output_buffer);
+
         memset(output_buffer, '\0', strlen(output_buffer));
     }
 
     send(client_sock, "`", sizeof("`"), 0);
 
     free(output_buffer);
-    printf("FINISHED\n");
+
+    if (DEBUG)
+        printf("FINISHED\n");
 }
 
 void run_prog(int client_sock, char** args)
@@ -332,7 +376,9 @@ void run_prog(int client_sock, char** args)
         return;
     }
 
-    printf("IN RUN_PROG FUNCTION\n");
+    if (DEBUG)
+        printf("IN RUN_PROG FUNCTION\n");
+
     static char* base_dir = "./programs/";
     // check if cc works
     static char* base_compile_command = "cc -o ";
@@ -355,9 +401,6 @@ void run_prog(int client_sock, char** args)
         arg_count ++;
     }
 
-    printf("NUMBER OF ARGS: %d\n", arg_count);
-
-
     char* program_args = malloc(sizeof(ARG_BUFFER_SIZE) * arg_count + arg_count); // + arg count for spaces
 
     program_args[0] = '\0';
@@ -370,7 +413,11 @@ void run_prog(int client_sock, char** args)
         // remember the null character - might need to remove it
     }
 
-    printf("PROGRAM ARGS: %s\n", program_args);
+    if (DEBUG)
+    {
+        printf("NUMBER OF ARGS: %d\n", arg_count);
+        printf("PROGRAM ARGS: %s\n", program_args);
+    }
 
 
     int executable_exists = 0;
@@ -403,10 +450,42 @@ void run_prog(int client_sock, char** args)
     if (executable_exists)
     {
         // check if its newer than any of the source files
-        compile_needed = 1;
+        const char* date_check_command = "ls -Art ";
+        char* actual_command = malloc(sizeof(char) * BUFFER_SIZE);
+        char* out = malloc(sizeof(char) * BUFFER_SIZE);
+        out[0] = '\0';
+        actual_command[0] = '\0';
+
+        strcpy(actual_command, date_check_command);
+        strcat(actual_command, "./programs/");
+        strcat(actual_command, args[1]);
+        strcat(actual_command, " | tail -n 1");
+
+        FILE* date_p = popen(actual_command, "r");
+
+        fgets(out, BUFFER_SIZE, date_p);
+        printf("output from ls: %s\n", out);
+
+        fclose(date_p);
+
         // we having 1 as the default so check the opposite and set to 0
 
+        if (DEBUG)
+        {
+            printf("Most recent file: %s\n", out);
+        }
+
+        // the executable is the most recent file in the directory
+        if (strcmp(out, args[1]) == 0)
+        {
+            compile_needed = 0;
+        }
+
+        free(out);
     }
+
+    if (DEBUG)
+        printf("Compile needed: %s\n", compile_needed);
 
     if (compile_needed)
     {
@@ -421,7 +500,8 @@ void run_prog(int client_sock, char** args)
         
         // cc -o ./programs/progname ./programs/progname/*.c
 
-        printf("COMPILE COMMAND: %s\n", command);
+        if (DEBUG)
+            printf("COMPILE COMMAND: %s\n", command);
 
         FILE* f = popen(command, "r");
         fclose(f);
@@ -433,14 +513,18 @@ void run_prog(int client_sock, char** args)
     strcat(executable, " ");
     strcat(executable, program_args);
     
-    printf("EXECUTABLE: %s\n", executable);
+    if (DEBUG)
+        printf("EXECUTABLE: %s\n", executable);
+
     FILE* f = popen(executable, "r");
 
     char* prog_output = malloc(sizeof(char) * BUFFER_SIZE);
 
     while (fgets(prog_output, BUFFER_SIZE, f) != NULL)
     {
-        printf("%s", prog_output);
+        if (DEBUG)
+            printf("%s", prog_output);
+
         send(client_sock, prog_output, strlen(prog_output), 0);
         memset(prog_output, '\0', strlen(prog_output));
     }
@@ -448,17 +532,7 @@ void run_prog(int client_sock, char** args)
     send(client_sock, "`", strlen("`"), 0);
 
     fclose(f);
-
-    // need to use exec or something
-
-// sonmething like this    exec(program_dir, program_args);
-// actually maybe popen so we can the output and send back to user
-
-
-    // do the line by line and finish with the terminator character, dont forget to sleep
-
     closedir(dr);
-
 
     free(program_dir);
     free(executable);

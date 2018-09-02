@@ -1,9 +1,6 @@
 #include "common.h"
 #include "server_func.h"
 
-#define DEBUG 1
-
-
 /* change error printf to perror */
 
 /* global variable :( */
