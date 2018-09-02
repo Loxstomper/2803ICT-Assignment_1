@@ -1,6 +1,4 @@
-all: client.o server.o client_func.o server_func.o common.o
-	cc -o client client.o client_func.o common.o common.h client.h
-	cc -o server server.o server_func.o common.o common.h server_func.h
+all: client server
 
 client: client.o  client_func.o common.o
 	cc -o client client.o client_func.o common.o common.h client.h
@@ -24,4 +22,4 @@ server_func.o: server_func.c
 	cc server_func.c -c
 
 clean:
-	rm -rf *.o client server
+	rm -rf *.o *.gch client server

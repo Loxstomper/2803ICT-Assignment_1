@@ -254,11 +254,10 @@ void get_client(int sock, char message[BUFFER_SIZE])
 // run function
 void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
 {
-    printf("RUN FUNCTION ON CLIENT\n");
+    // printf("RUN FUNCTION ON CLIENT\n");
 
     char* buffer = malloc(sizeof(char) * BUFFER_SIZE);
 
-    /* figure out if going to print the output or save to file */
     int count = 0;
     int save_to_file = 0;
     char* file_path;
@@ -273,54 +272,66 @@ void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
     // run prog [args] [-f file]
 
     // i always write the file, how would you tell if the last paramter was a file?
-    // you could but check if there was a file extension, but what if the user did
+    // you could check if there was a file extension, but what if the user did
     // not put a file extension? it would be treated as an argument 
     // the -f flag is required for saving the output to file
 
 
-    // if (strcmp(args[count - 1], "-f") == 0)
-    if (args[count - 2][0] == '-' && args[count - 2][1] == 'f')
+    if (strcmp(args[count - 2], "-f") == 0)
     {
         save_to_file = 1;   
 
+        // ./localfile
         file_path = (char*) malloc(sizeof(char) * BUFFER_SIZE);
-        strcpy(file_path, args[count - 1]);
-
-        printf("FILE PATH: %s\n", file_path);
+        strcpy(file_path, "./");
+        strcat(file_path, args[count - 1]);
 
         // removing the -f arg from the message and file_path
         // assuming no trailing whitespace
-        message[strlen(message) - strlen(file_path) - 5] = '\0';
-        printf("MESSAGE: %s\n", message);
+        message[strlen(message) - strlen(file_path) - 3] = '\0';
+        // printf("Trimmed MESSAGE: %s\n", message);
     }
-    // also need to check for filename
-    // how do we know its a file?
+
+    // this is here because want to see if an error occured before sending data to the server
+
+    FILE* fp;
+
+    if (save_to_file)
+    {
+        fp = fopen(file_path, "w");
+
+        if (fp == NULL)
+        {
+            printf("Error opening local file\n");
+            return;
+        }
+    }
 
     // send message the the server
     send(sock, message, strlen(message), 0);
 
-    // recv(sock, buffer, BUFFER_SIZE, 0);
-    if (!save_to_file)
+
+    if (save_to_file == 0)
     {
+        fclose(fp);
+        // for some reason i am getting "Fatal error: glibc detected an invalid stdio handle"
+        // even though i use read_data() throughout the client and it doesnt happen there
         read_data(sock);
     }
     // very similar to read_data but save to file
     else
     {
+        memset(buffer, '\0', 10);
 
-        memset(buffer, '\0', 0);
-
-        int  reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
-        FILE* fp = fopen(args[1], "w");
-
+        int reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
 
         // check if this was the whole message
         if (buffer[strlen(buffer) - 1] == '`')
         {
-            // printf("ONLY A SHORT MESSAGE\n");
             buffer[strlen(buffer) - 1] = '\0';
-            fprintf(fp, "%s\n", buffer);
+            fprintf(fp, "%s", buffer);
             free(buffer);
+            fclose(fp);
             return;
         }
 
@@ -333,7 +344,8 @@ void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
                 break;
             }
 
-            printf("%s", buffer);
+            // printf("%s", buffer);
+            fprintf(fp, "%s", buffer);
             memset(buffer, '\0', strlen(buffer));
 
             reply_length = recv(sock, buffer, BUFFER_SIZE, 0);
@@ -342,9 +354,6 @@ void run_prog_client(int sock, char message[BUFFER_SIZE], char** args)
         fclose(fp);
 
     }
-
-    // printf("%s\n", buffer);
-
 
     free(args);
 }

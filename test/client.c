@@ -1,6 +1,7 @@
 #include "common.h"
 #include "client.h"
 #include "client_func.h"
+#include <sys/time.h>
 
 
 /* use signals to check for ctrl+c and run quit function */
@@ -16,13 +17,12 @@ int main(int argc, char ** argv)
     /* } */
 
 
-    char    message[BUFFER_SIZE];
-    char    reply[BUFFER_SIZE];
+    char    message[BUFFER_SIZE], reply[BUFFER_SIZE];
     int     sock;
     char**  args;
-    clock_t start_time;
-    clock_t end_time;
+    clock_t start_time, end_time;
     double  duration;
+    struct  timeval before, after;
 
     
     struct sockaddr_in server;
@@ -96,21 +96,22 @@ int main(int argc, char ** argv)
             }
 
             start_time = clock();
+            gettimeofday(&before, NULL);
 
             if (strcmp(args[0], "put") == 0)
             {
-                printf("{PUT CLIENT\n");
+                // printf("{PUT CLIENT\n");
                 put_client(new_sock, message, args);
             }
             else if (strcmp(args[0], "get") == 0)
             {
-                printf("GET CLIENT\n");
+                // printf("GET CLIENT\n");
                 get_client(new_sock, message);
                 free_args(args);
             }
             else if (strcmp(args[0], "run") == 0)
             {
-                printf("RUN CLIENT");
+                // printf("RUN CLIENT");
                 run_prog_client(new_sock, message, args);
             }
 
@@ -132,8 +133,13 @@ int main(int argc, char ** argv)
             }
 
             end_time = clock();
+            gettimeofday(&after, NULL);
             duration = (double) (end_time - start_time) / CLOCKS_PER_SEC;
-            printf("\nTime: %lf \n", duration);
+            printf("\nCPU Time: %lf \n", duration);
+
+            printf("Time    : %f\n",
+            (double) (after.tv_usec - before.tv_usec) / 1000000 +
+            (double) (after.tv_sec - before.tv_sec));
 
             // output finished - this isnt needed because its a child
             memset(&message, '\0', strlen(message));
